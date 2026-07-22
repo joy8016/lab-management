@@ -6,6 +6,7 @@ import Dashboard from './components/Dashboard'
 import SampleIntake from './components/SampleIntake'
 import TestEntry from './components/TestEntry'
 import QualityControl from './components/QualityControl'
+import Report from './components/Report'
 import PlaceholderView from './components/PlaceholderView'
 
 export default function LabTechnicianPortal() {
@@ -23,12 +24,7 @@ export default function LabTechnicianPortal() {
       case 'quality-control':
         return <QualityControl />
       case 'reports':
-        return (
-          <PlaceholderView
-            title="Reports"
-            description="Generate, export, and print lab test reports, turnaround analytics, and QC summaries."
-          />
-        )
+        return <Report />
       case 'settings':
         return (
           <PlaceholderView

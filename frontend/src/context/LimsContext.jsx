@@ -5,7 +5,7 @@ import axios from 'axios'
 axios.defaults.baseURL = 'http://localhost:5000'
 axios.defaults.withCredentials = true
 
-const LimsContext = createContext()
+const LimsContext = createContext()      
 
 export function LimsProvider({ children }) {
   // Navigation View State: 'landing' | 'lab-manager' | 'super-admin' | 'pathologist' | 'lab-technician' | 'sample-collector' | 'receptionist' | 'register' | 'login'
