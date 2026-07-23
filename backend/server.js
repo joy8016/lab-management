@@ -5,6 +5,7 @@ import morgan from "morgan";
 import cookieParser from "cookie-parser";
 import { connectDB } from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
+import labtechnician from "./routes/labtechnician.js"
 
 // Connect to MongoDB
 connectDB();
@@ -30,6 +31,7 @@ app.use(cookieParser());
 
 // Mount the separate backend routes under specific paths
 app.use('/api/auth', authRoutes);
+app.use('/api/labtechnician', labtechnician)
 
 // Health check
 app.get("/health", (req, res) => {

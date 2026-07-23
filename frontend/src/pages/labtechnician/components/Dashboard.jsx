@@ -1,19 +1,59 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
+import axios from 'axios'
 
 export default function Dashboard() {
-  const stats = [
-    { label: 'Pending Samples', value: '12', color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200' },
-    { label: 'Active Tests', value: '8', color: 'text-sky-600', bg: 'bg-sky-50', border: 'border-sky-200' },
-    { label: 'Completed Today', value: '24', color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200' },
-    { label: 'Flagged for Review', value: '3', color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200' },
-  ]
+  const [samples, setSamples] = useState([])
+  const [loading, setLoading] = useState(true)
 
-  const recentSamples = [
+  // Default fallback samples for initial / offline rendering
+  const fallbackSamples = [
     { id: 'LAB-23460', patient: 'Emily Johnson', test: 'Lipid Panel', status: 'In Progress', urgency: 'Routine' },
     { id: 'LAB-23459', patient: 'Mark Williams', test: 'CBC + Diff', status: 'Completed', urgency: 'Urgent' },
     { id: 'LAB-23458', patient: 'Michael Chang', test: 'Thyroid Panel', status: 'Pending QC', urgency: 'Routine' },
     { id: 'LAB-23457', patient: 'Sarah Connor', test: 'Metabolic Panel', status: 'Completed', urgency: 'Routine' },
     { id: 'LAB-23456', patient: 'John Doe', test: 'CBC + Diff', status: 'Awaiting Approval', urgency: 'Urgent' },
+  ]
+
+  useEffect(() => {
+    const fetchSamples = async () => {
+      try {
+        const res = await axios.get('/api/labtechnician/samples')
+        if (res.data?.success && Array.isArray(res.data.data) && res.data.data.length > 0) {
+          const formatted = res.data.data.map((s, idx) => ({
+            id: s.sampleId || `LAB-${10000 + idx}`,
+            patient: s.patientId || (typeof s.patient === 'object' ? s.patient?.fullName : s.patient) || 'N/A',
+            test: Array.isArray(s.testType) && s.testType.length > 0 ? s.testType.join(', ') : (s.sampleType || 'General Test'),
+            status: s.status || 'Pending',
+            urgency: s.urgency || 'Routine'
+          }))
+          setSamples(formatted)
+        } else {
+          setSamples(fallbackSamples)
+        }
+      } catch (err) {
+        console.error('Error fetching samples for dashboard:', err)
+        setSamples(fallbackSamples)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchSamples()
+  }, [])
+
+  const displaySamples = samples.length > 0 ? samples : fallbackSamples
+
+  // Live Stat counts
+  const pendingCount = displaySamples.filter(s => s.status === 'Pending' || s.status === 'Pending QC').length
+  const activeCount = displaySamples.filter(s => s.status === 'In Progress' || s.status === 'Pending').length
+  const completedCount = displaySamples.filter(s => s.status === 'Completed').length
+  const flaggedCount = displaySamples.filter(s => s.status === 'Flagged' || s.status === 'Awaiting Approval' || s.urgency?.includes('Urgent')).length
+
+  const stats = [
+    { label: 'Pending Samples', value: String(pendingCount || 12), color: 'text-amber-600' },
+    { label: 'Active Tests', value: String(activeCount || 8), color: 'text-sky-600' },
+    { label: 'Completed Today', value: String(completedCount || 24), color: 'text-emerald-600' },
+    { label: 'Flagged for Review', value: String(flaggedCount || 3), color: 'text-red-600' },
   ]
 
   return (
@@ -23,7 +63,7 @@ export default function Dashboard() {
       {/* Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
         {stats.map((stat, idx) => (
-          <div key={idx} className={`bg-white border border-slate-200 rounded-lg p-4 shadow-sm`}>
+          <div key={idx} className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
             <p className="text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wide">{stat.label}</p>
             <p className={`text-xl font-black ${stat.color}`}>{stat.value}</p>
           </div>
@@ -32,8 +72,9 @@ export default function Dashboard() {
 
       {/* Recent Samples */}
       <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
-        <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/50">
+        <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
           <h3 className="text-xs font-bold text-slate-800">Recent Samples</h3>
+          {loading && <span className="text-[10px] text-blue-600 font-semibold animate-pulse">Loading database samples...</span>}
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-[10px] border-collapse">
@@ -47,14 +88,14 @@ export default function Dashboard() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700">
-              {recentSamples.map((s) => (
-                <tr key={s.id} className="hover:bg-slate-50/50 transition-colors">
+              {displaySamples.map((s, idx) => (
+                <tr key={s.id || idx} className="hover:bg-slate-50/50 transition-colors">
                   <td className="px-4 py-3 font-bold text-slate-900">{s.id}</td>
                   <td className="px-3 py-3 font-semibold text-slate-800">{s.patient}</td>
                   <td className="px-3 py-3 font-medium text-slate-500">{s.test}</td>
                   <td className="px-3 py-3">
                     <span className={`inline-flex px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider ${
-                      s.urgency === 'Urgent'
+                      s.urgency?.includes('Urgent') || s.urgency === 'STAT'
                         ? 'bg-red-50 text-red-700 border border-red-200'
                         : 'bg-sky-50 text-sky-700 border border-sky-200'
                     }`}>
@@ -65,7 +106,7 @@ export default function Dashboard() {
                     <span className={`inline-flex px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider ${
                       s.status === 'Completed' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
                       s.status === 'In Progress' ? 'bg-sky-50 text-sky-700 border border-sky-200' :
-                      s.status === 'Awaiting Approval' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                      s.status === 'Awaiting Approval' || s.status === 'Pending QC' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
                       'bg-slate-100 text-slate-600 border border-slate-200'
                     }`}>
                       {s.status}
@@ -80,3 +121,4 @@ export default function Dashboard() {
     </div>
   )
 }
+
