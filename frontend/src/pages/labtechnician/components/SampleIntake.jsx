@@ -4,7 +4,7 @@ import axios from 'axios'
 export default function SampleIntake() {
   // Toggle Auto-Generate ID
   const [autoGenerateId, setAutoGenerateId] = useState(true)
-  const [sampleId, setSampleId] = useState('SMP-2026-88910')
+  const [sampleId, setSampleId] = useState(() => `SMP-2026-${Math.floor(10000 + Math.random() * 90000)}`)
 
   const handleToggleAutoId = () => {
     const nextState = !autoGenerateId
@@ -173,11 +173,17 @@ export default function SampleIntake() {
       const res = await axios.post('/api/labtechnician/createNewSample', payload)
       if (res.data?.success || res.status === 201) {
         setShowSuccessModal(true)
+        if (autoGenerateId) {
+          setSampleId(`SMP-2026-${Math.floor(10000 + Math.random() * 90000)}`)
+        }
       }
     } catch (err) {
       console.error('Error submitting sample:', err)
       // Display modal on success regardless if local testing without backend DB connection, fallback gracefully:
       setShowSuccessModal(true)
+      if (autoGenerateId) {
+        setSampleId(`SMP-2026-${Math.floor(10000 + Math.random() * 90000)}`)
+      }
     }
   }
 

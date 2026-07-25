@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import axios from 'axios'
 import PendingSamplesQueue from './PendingSamplesQueue'
 import FlaggedResultsReview from './FlaggedResultsReview'
 
@@ -94,14 +95,137 @@ export default function TestEntry() {
     }
   }
 
+  const [dbSamples, setDbSamples] = useState([])
+
+  // Fetch all samples from backend database on mount
+  useEffect(() => {
+    const fetchSamplesFromDb = async () => {
+      try {
+        const res = await axios.get('/api/labtechnician/samples')
+        if (res.data?.success && Array.isArray(res.data.data)) {
+          setDbSamples(res.data.data)
+        }
+      } catch (err) {
+        console.warn('Backend samples API unavailable, using local cache:', err)
+      }
+    }
+    fetchSamplesFromDb()
+  }, [])
+
+  // Dynamic Queues merged with database samples
+  const pendingQueue = [
+    ...dbSamples.map(s => ({
+      id: s.sampleId || s._id,
+      badge: s.urgency || 'Routine',
+      badgeStyle: s.urgency?.includes('STAT') ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-slate-100 text-slate-600 border border-slate-200'
+    })),
+    { id: 'LAB-23456', badge: 'STAT', badgeStyle: 'bg-red-50 text-red-700 border border-red-200' },
+    { id: 'LAB-21457', badge: 'Routine', badgeStyle: 'bg-slate-100 text-slate-600 border border-slate-200' },
+    { id: 'LAB-21458', badge: 'Routine', badgeStyle: 'bg-slate-100 text-slate-600 border border-slate-200' },
+    { id: 'LAB-21459', badge: 'Urgent', badgeStyle: 'bg-amber-50 text-amber-700 border border-amber-200' }
+  ].filter((v, idx, self) => self.findIndex(t => t.id === v.id) === idx)
+
+  const activeQueue = [
+    ...dbSamples.map(s => ({
+      id: s.sampleId || s._id,
+      badge: 'In Progress',
+      badgeStyle: 'bg-sky-50 text-sky-700 border border-sky-200'
+    })),
+    { id: 'LAB-23456', badge: 'Running', badgeStyle: 'bg-blue-50 text-blue-700 border border-blue-200' },
+    { id: 'LAB-21457', badge: 'Analyzing', badgeStyle: 'bg-indigo-50 text-indigo-700 border border-indigo-200' },
+    { id: 'LAB-21458', badge: 'In Progress', badgeStyle: 'bg-sky-50 text-sky-700 border border-sky-200' },
+    { id: 'LAB-21459', badge: 'Synced', badgeStyle: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
+    { id: 'LAB-21460', badge: 'In Progress', badgeStyle: 'bg-sky-50 text-sky-700 border border-sky-200' },
+    { id: 'LAB-21461', badge: 'Running', badgeStyle: 'bg-blue-50 text-blue-700 border border-blue-200' },
+    { id: 'LAB-21462', badge: 'Analyzing', badgeStyle: 'bg-indigo-50 text-indigo-700 border border-indigo-200' },
+    { id: 'LAB-21463', badge: 'In Progress', badgeStyle: 'bg-sky-50 text-sky-700 border border-sky-200' }
+  ].filter((v, idx, self) => self.findIndex(t => t.id === v.id) === idx)
+
+  const abnormalQueue = [
+    { id: 'LAB-23456', badge: 'Critical High', badgeStyle: 'bg-red-100 text-red-800 border border-red-300 font-extrabold' },
+    { id: 'LAB-21457', badge: 'High Lipid', badgeStyle: 'bg-amber-100 text-amber-800 border border-amber-300 font-extrabold' },
+    { id: 'LAB-21462', badge: 'Low Hgb', badgeStyle: 'bg-orange-100 text-orange-800 border border-orange-300 font-extrabold' }
+  ]
+
   const [selectedSampleId, setSelectedSampleId] = useState('LAB-23456')
   const [currentSampleData, setCurrentSampleData] = useState(samplesData['LAB-23456'])
 
-  // Update sample data when switching sample ID from queue
-  const handleSelectSample = (id) => {
+  // Fetch sample test details directly from backend API when clicked
+  const handleSelectSample = async (id) => {
     setSelectedSampleId(id)
+
+    // Check local database cache first
+    const foundInDb = dbSamples.find(s => s.sampleId === id || s._id === id)
+    if (foundInDb) {
+      const patientName = foundInDb.patient?.fullName || (typeof foundInDb.patient === 'object' ? foundInDb.patient?.fullName : foundInDb.patient) || 'Registered Patient'
+      const dobStr = foundInDb.patient?.dob ? new Date(foundInDb.patient.dob).toLocaleDateString() : (foundInDb.collectionDate ? new Date(foundInDb.collectionDate).toLocaleDateString() : '01/01/1988')
+      const testName = Array.isArray(foundInDb.testType) ? foundInDb.testType.join(', ') + ' Results' : (foundInDb.sampleType ? `${foundInDb.sampleType} Analysis` : 'Laboratory Test Panel')
+
+      setCurrentSampleData({
+        id: foundInDb.sampleId || id,
+        patient: patientName,
+        dob: dobStr,
+        gender: foundInDb.patient?.gender || 'Unspecified',
+        testType: testName,
+        urgency: foundInDb.urgency || 'Routine',
+        wbc: samplesData[id]?.wbc || { value: '7.4', inputMode: 'Input', units: 'x10^9/L', instrument: 'Sysmex XN-1000', syncedTime: 'Auto-Synced', refMin: 4.0, refMax: 11.0, flag: '', isCritical: false },
+        redCellParams: samplesData[id]?.redCellParams || [
+          { id: 'rbc', name: 'RBC', instrument: 'Manual Entry/Interface', value: '4.8', units: 'ug/L', refMin: 1.8, refMax: 4.8, flag: '', isChecked: true, isHighlight: false },
+          { id: 'hgb', name: 'Hgb', instrument: 'Manual Entry/Interface', value: '13.5', units: 'ug/L', refMin: 13.9, refMax: 13.9, flag: '', isChecked: true, isHighlight: false },
+          { id: 'hct', name: 'Hct', instrument: 'Manual Entry/Interface', value: '41', units: '%', refMin: 41, refMax: 41, flag: '', isChecked: true, isHighlight: false },
+          { id: 'plt', name: 'Plt', instrument: 'Manual Entry/Interface', value: '280', units: 'ng/L', refMin: 280, refMax: 280, flag: '', isChecked: true, isHighlight: false }
+        ]
+      })
+      return
+    }
+
+    // Try fetching from GET /api/labtechnician/samples/:id
+    try {
+      const res = await axios.get(`/api/labtechnician/samples/${id}`)
+      if (res.data?.success && res.data?.data) {
+        const s = res.data.data
+        const patientName = s.patient?.fullName || (typeof s.patient === 'object' ? s.patient?.fullName : s.patient) || 'Registered Patient'
+        const dobStr = s.patient?.dob ? new Date(s.patient.dob).toLocaleDateString() : (s.collectionDate ? new Date(s.collectionDate).toLocaleDateString() : '01/01/1988')
+        const testName = Array.isArray(s.testType) ? s.testType.join(', ') + ' Results' : (s.sampleType ? `${s.sampleType} Analysis` : 'Laboratory Test Panel')
+
+        setCurrentSampleData({
+          id: s.sampleId || id,
+          patient: patientName,
+          dob: dobStr,
+          gender: s.patient?.gender || 'Unspecified',
+          testType: testName,
+          urgency: s.urgency || 'Routine',
+          wbc: samplesData[id]?.wbc || { value: '7.4', inputMode: 'Input', units: 'x10^9/L', instrument: 'Sysmex XN-1000', syncedTime: 'Auto-Synced', refMin: 4.0, refMax: 11.0, flag: '', isCritical: false },
+          redCellParams: samplesData[id]?.redCellParams || [
+            { id: 'rbc', name: 'RBC', instrument: 'Manual Entry/Interface', value: '4.8', units: 'ug/L', refMin: 1.8, refMax: 4.8, flag: '', isChecked: true, isHighlight: false },
+            { id: 'hgb', name: 'Hgb', instrument: 'Manual Entry/Interface', value: '13.5', units: 'ug/L', refMin: 13.9, refMax: 13.9, flag: '', isChecked: true, isHighlight: false },
+            { id: 'hct', name: 'Hct', instrument: 'Manual Entry/Interface', value: '41', units: '%', refMin: 41, refMax: 41, flag: '', isChecked: true, isHighlight: false },
+            { id: 'plt', name: 'Plt', instrument: 'Manual Entry/Interface', value: '280', units: 'ng/L', refMin: 280, refMax: 280, flag: '', isChecked: true, isHighlight: false }
+          ]
+        })
+        return
+      }
+    } catch (err) {
+      // Fallback gracefully to local mock dataset
+    }
+
     if (samplesData[id]) {
       setCurrentSampleData(samplesData[id])
+    } else {
+      setCurrentSampleData({
+        id: id,
+        patient: 'Patient Record',
+        dob: '01/01/1985',
+        gender: 'Male',
+        testType: 'Diagnostic Test Panel',
+        urgency: 'Routine',
+        wbc: { value: '7.0', inputMode: 'Input', units: 'x10^9/L', instrument: 'Sysmex XN-1000', syncedTime: 'Auto-Synced', refMin: 4.0, refMax: 11.0, flag: '', isCritical: false },
+        redCellParams: [
+          { id: 'p1', name: 'RBC', instrument: 'Manual Entry/Interface', value: '4.5', units: 'ug/L', refMin: 1.8, refMax: 4.8, flag: '', isChecked: true, isHighlight: false },
+          { id: 'p2', name: 'Hgb', instrument: 'Manual Entry/Interface', value: '13.8', units: 'ug/L', refMin: 13.9, refMax: 13.9, flag: '', isChecked: true, isHighlight: false },
+          { id: 'p3', name: 'Hct', instrument: 'Manual Entry/Interface', value: '42', units: '%', refMin: 41, refMax: 41, flag: '', isChecked: true, isHighlight: false }
+        ]
+      })
     }
   }
 
@@ -226,37 +350,78 @@ export default function TestEntry() {
             
             {/* Workflow Stepper Bar */}
             <div className="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-[11px] font-bold text-slate-600 overflow-x-auto gap-2">
-              <div className="flex items-center gap-1.5 text-blue-600 shrink-0">
+              <button
+                type="button"
+                onClick={() => setCurrentStep('received')}
+                className={`flex items-center gap-1.5 shrink-0 px-2 py-1 rounded transition-colors cursor-pointer ${
+                  currentStep === 'received'
+                    ? 'bg-[#1e3a8a] text-white font-extrabold shadow-xs'
+                    : 'text-blue-600 hover:bg-blue-50'
+                }`}
+              >
                 <span className="w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">✓</span>
                 <span>Sample Received</span>
-              </div>
+              </button>
               <span className="text-slate-300">———</span>
-              
-              <div className="flex items-center gap-1.5 text-blue-600 shrink-0">
+
+              <button
+                type="button"
+                onClick={() => setCurrentStep('synced')}
+                className={`flex items-center gap-1.5 shrink-0 px-2 py-1 rounded transition-colors cursor-pointer ${
+                  currentStep === 'synced'
+                    ? 'bg-[#1e3a8a] text-white font-extrabold shadow-xs'
+                    : 'text-blue-600 hover:bg-blue-50'
+                }`}
+              >
                 <span className="w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">✓</span>
                 <span>Results Synced</span>
-              </div>
+              </button>
               <span className="text-slate-300">———</span>
 
-              {/* Active Step Highlighted Badge */}
-              <div className="bg-[#1e3a8a] text-white px-4 py-1.5 rounded-md font-extrabold flex items-center gap-2 shadow-xs shrink-0 clip-path-chevron">
+              <button
+                type="button"
+                onClick={() => setCurrentStep('entered')}
+                className={`flex items-center gap-1.5 shrink-0 px-2 py-1 rounded transition-colors cursor-pointer ${
+                  currentStep === 'entered'
+                    ? 'bg-[#1e3a8a] text-white font-extrabold shadow-xs'
+                    : 'text-blue-600 hover:bg-blue-50'
+                }`}
+              >
                 <span>✓</span>
                 <span>Results Entered</span>
-              </div>
+              </button>
               <span className="text-slate-300">———</span>
 
-              <div className={`flex items-center gap-1.5 shrink-0 ${currentStep === 'draft' || currentStep === 'approved' ? 'text-blue-600' : 'text-slate-400'}`}>
-                <span className={`w-3.5 h-3.5 rounded-full border border-current flex items-center justify-center text-[9px] ${currentStep === 'draft' ? 'bg-blue-600 text-white border-blue-600' : ''}`}>
+              <button
+                type="button"
+                onClick={() => setCurrentStep('draft')}
+                className={`flex items-center gap-1.5 shrink-0 px-2 py-1 rounded transition-colors cursor-pointer ${
+                  currentStep === 'draft'
+                    ? 'bg-[#1e3a8a] text-white font-extrabold shadow-xs'
+                    : 'text-slate-500 hover:bg-slate-100'
+                }`}
+              >
+                <span className={`w-3.5 h-3.5 rounded-full border border-current flex items-center justify-center text-[9px] ${currentStep === 'draft' ? 'bg-white text-[#1e3a8a] border-white' : ''}`}>
                   {currentStep === 'draft' ? '✓' : ''}
                 </span>
                 <span>Draft Sent</span>
-              </div>
+              </button>
               <span className="text-slate-300">———</span>
 
-              <div className="flex items-center gap-1.5 text-slate-400 shrink-0">
-                <span className="w-3.5 h-3.5 rounded-full border border-slate-300 flex items-center justify-center text-[9px]"></span>
+              <button
+                type="button"
+                onClick={() => setCurrentStep('approved')}
+                className={`flex items-center gap-1.5 shrink-0 px-2 py-1 rounded transition-colors cursor-pointer ${
+                  currentStep === 'approved'
+                    ? 'bg-emerald-700 text-white font-extrabold shadow-xs'
+                    : 'text-slate-500 hover:bg-slate-100'
+                }`}
+              >
+                <span className={`w-3.5 h-3.5 rounded-full border border-current flex items-center justify-center text-[9px] ${currentStep === 'approved' ? 'bg-white text-emerald-700 border-white' : ''}`}>
+                  {currentStep === 'approved' ? '✓' : ''}
+                </span>
                 <span>Pathologist Approved</span>
-              </div>
+              </button>
             </div>
 
             {/* Test Title Header */}
@@ -474,7 +639,7 @@ export default function TestEntry() {
                 <button
                   type="button"
                   onClick={handleSubmitApproval}
-                  className="px-4 py-2 bg-blue-300 text-white rounded text-xs font-bold cursor-not-allowed opacity-80"
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-bold transition-all shadow-sm cursor-pointer active:scale-95"
                 >
                   Submit for Approval
                 </button>
@@ -503,12 +668,38 @@ export default function TestEntry() {
 
         {/* Right 1 Column: Queue & Review Cards */}
         <div className="lg:col-span-1 space-y-4">
-          <PendingSamplesQueue
-            samples={Object.values(samplesData).map(s => ({ id: s.id }))}
-            selectedSampleId={selectedSampleId}
-            onSelectSample={handleSelectSample}
-          />
-          <FlaggedResultsReview />
+          {activeSubTab === 'pending' && (
+            <>
+              <PendingSamplesQueue
+                title="Pending Samples Queue"
+                samples={pendingQueue}
+                selectedSampleId={selectedSampleId}
+                onSelectSample={handleSelectSample}
+              />
+              <FlaggedResultsReview />
+            </>
+          )}
+
+          {activeSubTab === 'active' && (
+            <PendingSamplesQueue
+              title="Active Tests Queue"
+              samples={activeQueue}
+              selectedSampleId={selectedSampleId}
+              onSelectSample={handleSelectSample}
+            />
+          )}
+
+          {activeSubTab === 'abnormal' && (
+            <>
+              <PendingSamplesQueue
+                title="Abnormal Review Queue"
+                samples={abnormalQueue}
+                selectedSampleId={selectedSampleId}
+                onSelectSample={handleSelectSample}
+              />
+              <FlaggedResultsReview flaggedNotes="Critical leukocytosis & lipid flags pending Pathologist review." />
+            </>
+          )}
         </div>
 
       </div>
