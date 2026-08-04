@@ -6,6 +6,9 @@ import DashboardOverview from './components/DashboardOverview'
 import BranchesManagement from './components/BranchesManagement'
 import UsersManagement from './components/UsersManagement'
 import RolesPermissions from './components/RolesPermissions'
+import ProfileView from './components/ProfileView'
+import TestCatalog from './components/TestCatalog'
+import PricingBilling from './components/PricingBilling'
 
 // Reusable mock component for sections under construction or basic previews
 const PlaceholderView = ({ title, description }) => (
@@ -43,20 +46,12 @@ export default function SuperAdminPortal() {
         return <UsersManagement />
       case 'roles':
         return <RolesPermissions />
+      case 'profile':
+        return <ProfileView />
       case 'catalog':
-        return (
-          <PlaceholderView 
-            title="Test Catalog" 
-            description="Manage blood analysis catalogs, sample volume guidelines, pathology ranges, and panel mappings." 
-          />
-        )
+        return <TestCatalog />
       case 'pricing':
-        return (
-          <PlaceholderView 
-            title="Pricing &amp; Billing" 
-            description="Adjust laboratory service pricing matrices, client hospital invoices, currency profiles, and merchant gateways." 
-          />
-        )
+        return <PricingBilling />
       case 'ranges':
         return (
           <PlaceholderView 
@@ -84,7 +79,11 @@ export default function SuperAdminPortal() {
       {/* Main Panel Content Area */}
       <div className="flex-1 flex flex-col min-w-0 px-6 sm:px-8 pb-12">
         {/* Top Header toolbar */}
-        <Header onLogout={logoutUser} onBack={() => setView('landing')} />
+        <Header 
+          onLogout={logoutUser} 
+          onBack={() => setView('landing')} 
+          onOpenProfile={() => setActiveTab('profile')}
+        />
 
         {/* Dynamic Inner Panel */}
         <main className="mt-6 flex-1">

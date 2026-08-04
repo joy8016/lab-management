@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 
 export default function PatientRegistration() {
   const [fullName, setFullName] = useState('')
@@ -7,10 +7,36 @@ export default function PatientRegistration() {
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
   const [address, setAddress] = useState('')
-  const [registeredPatients, setRegisteredPatients] = useState([
+
+  const defaultPatients = [
     { id: 'PAT-1029', name: 'John Doe', phone: '+1 555-0192', gender: 'Male', time: '10:15 AM' },
     { id: 'PAT-1028', name: 'Jane Smith', phone: '+1 555-0184', gender: 'Female', time: '09:40 AM' },
-  ])
+  ]
+
+  // Persistent state loaded from localStorage
+  const [registeredPatients, setRegisteredPatients] = useState(() => {
+    try {
+      const saved = localStorage.getItem('lims_registered_patients')
+      return saved ? JSON.parse(saved) : defaultPatients
+    } catch (e) {
+      return defaultPatients
+    }
+  })
+
+  // Sync to localStorage whenever patient list changes
+  useEffect(() => {
+    try {
+      localStorage.setItem('lims_registered_patients', JSON.stringify(registeredPatients))
+    } catch (e) {
+      console.error('Error persisting patient registration:', e)
+    }
+  }, [registeredPatients])
+
+  const [toastMessage, setToastMessage] = useState('')
+  const showToast = (msg) => {
+    setToastMessage(msg)
+    setTimeout(() => setToastMessage(''), 4000)
+  }
 
   const handleRegister = (e) => {
     e.preventDefault()
@@ -23,6 +49,7 @@ export default function PatientRegistration() {
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
     setRegisteredPatients([newPatient, ...registeredPatients])
+    showToast(`Patient ${newPatient.name} (${newPatient.id}) registered successfully! Data saved.`)
     setFullName('')
     setAge('')
     setPhone('')
@@ -31,7 +58,20 @@ export default function PatientRegistration() {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 space-y-6 font-sans" style={{ backgroundColor: '#f8fafc', color: '#0f172a' }}>
+    <div className="flex-1 overflow-y-auto p-6 space-y-6 font-sans text-left" style={{ backgroundColor: '#f8fafc', color: '#0f172a' }}>
+      {/* Toast Alert */}
+      {toastMessage && (
+        <div className="bg-emerald-600 text-white px-5 py-3 rounded-xl shadow-lg flex items-center justify-between animate-fade-in transition-all text-xs font-bold">
+          <div className="flex items-center gap-3">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+            <span>{toastMessage}</span>
+          </div>
+          <button onClick={() => setToastMessage('')} className="text-white/80 hover:text-white font-bold cursor-pointer">✕</button>
+        </div>
+      )}
+
       <div>
         <h2 className="text-xl font-black text-slate-900 tracking-tight">Patient Registration</h2>
         <p className="text-xs text-slate-500 font-semibold mt-1">Register new walk-in or appointment patients into the LIMS database</p>
@@ -127,9 +167,15 @@ export default function PatientRegistration() {
 
         {/* Recently Registered Patients */}
         <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-4 shadow-xs">
-          <h3 className="text-sm font-extrabold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2">
-            Recently Registered Today
-          </h3>
+          <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+            <h3 className="text-sm font-extrabold text-slate-900 uppercase tracking-wider">
+              Recently Registered Today
+            </h3>
+            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+              Persistent Storage Active
+            </span>
+          </div>
+
           <div className="space-y-3">
             {registeredPatients.map((p) => (
               <div key={p.id} className="p-3.5 rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-between">

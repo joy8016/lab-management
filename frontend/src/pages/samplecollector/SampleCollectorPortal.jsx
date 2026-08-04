@@ -38,7 +38,7 @@ export default function SampleCollectorPortal() {
       style={{ backgroundColor: '#141416', color: '#ffffff' }}
     >
       {/* Header */}
-      <Header />
+      <Header onBack={() => setView('landing')} />
 
       {/* Main Container: Sidebar + Content */}
       <div className="flex flex-1 overflow-hidden">
