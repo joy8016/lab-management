@@ -6,7 +6,7 @@ import DashboardOverview from './components/DashboardOverview'
 import BranchesManagement from './components/BranchesManagement'
 import UsersManagement from './components/UsersManagement'
 import RolesPermissions from './components/RolesPermissions'
-import ProfileView from './components/ProfileView'
+import ProfilePage from '../ProfilePage'
 import TestCatalog from './components/TestCatalog'
 import PricingBilling from './components/PricingBilling'
 
@@ -47,7 +47,7 @@ export default function SuperAdminPortal() {
       case 'roles':
         return <RolesPermissions />
       case 'profile':
-        return <ProfileView />
+        return <ProfilePage />
       case 'catalog':
         return <TestCatalog />
       case 'pricing':

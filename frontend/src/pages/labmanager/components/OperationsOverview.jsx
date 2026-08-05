@@ -1,11 +1,25 @@
 import React from 'react'
 import { ClipboardIcon, FlaskIcon, ShieldIcon } from '../../../components/Icons'
+import { useLims } from '../../../context/LimsContext'
 
 export default function OperationsOverview({ activeStaffCount, deptStaffCount }) {
+  const { operationsOverview } = useLims()
+
   const biochemistryStaff = deptStaffCount('Biochemistry')
   const hematologyStaff = deptStaffCount('Hematology')
   const radiologyStaff = deptStaffCount('Radiology')
   const microbiologyStaff = deptStaffCount('Microbiology')
+
+  const avgTat = operationsOverview?.avgTat || '28 Min'
+  const pendingLabSamples = operationsOverview?.pendingLabSamples || 36
+  const staffCountOnDuty = activeStaffCount || operationsOverview?.activeStaffCount || 4
+
+  const departments = operationsOverview?.departments || [
+    { name: 'Biochemistry', pendingSamples: 22, avgProcessTime: '34 mins', staffCount: biochemistryStaff, status: biochemistryStaff < 2 ? 'Staffing Alert' : 'Healthy' },
+    { name: 'Hematology', pendingSamples: 8, avgProcessTime: '18 mins', staffCount: hematologyStaff, status: 'Optimal' },
+    { name: 'Radiology', pendingSamples: 2, avgProcessTime: '45 mins', staffCount: radiologyStaff, status: 'Optimal' },
+    { name: 'Microbiology', pendingSamples: 4, avgProcessTime: '72 mins', staffCount: microbiologyStaff, status: 'Optimal' },
+  ]
 
   return (
     <div className="space-y-6">
@@ -22,7 +36,7 @@ export default function OperationsOverview({ activeStaffCount, deptStaffCount })
             <ClipboardIcon className="w-6 h-6" />
           </div>
           <div>
-            <div className="text-2xl font-extrabold text-gray-900 tracking-tight">28 Min</div>
+            <div className="text-2xl font-extrabold text-gray-900 tracking-tight">{avgTat}</div>
             <div className="text-xs font-medium text-gray-500 uppercase tracking-wider mt-0.5">
               Avg Turnaround Time (TAT)
             </div>
@@ -34,7 +48,7 @@ export default function OperationsOverview({ activeStaffCount, deptStaffCount })
             <FlaskIcon className="w-6 h-6" />
           </div>
           <div>
-            <div className="text-2xl font-extrabold text-gray-900 tracking-tight">36</div>
+            <div className="text-2xl font-extrabold text-gray-900 tracking-tight">{pendingLabSamples}</div>
             <div className="text-xs font-medium text-gray-500 uppercase tracking-wider mt-0.5">
               Pending Lab Samples
             </div>
@@ -46,7 +60,7 @@ export default function OperationsOverview({ activeStaffCount, deptStaffCount })
             <ShieldIcon className="w-6 h-6" />
           </div>
           <div>
-            <div className="text-2xl font-extrabold text-gray-900 tracking-tight">{activeStaffCount} / 8</div>
+            <div className="text-2xl font-extrabold text-gray-900 tracking-tight">{staffCountOnDuty} / 8</div>
             <div className="text-xs font-medium text-gray-500 uppercase tracking-wider mt-0.5">
               Active Technicians On-Duty
             </div>
@@ -76,67 +90,32 @@ export default function OperationsOverview({ activeStaffCount, deptStaffCount })
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50 bg-white">
-            <tr className="hover:bg-gray-50/50 transition-colors">
-              <td className="px-6 py-4 align-middle">
-                <strong className="font-semibold text-gray-900">Biochemistry</strong>
-              </td>
-              <td className="px-6 py-4 align-middle text-gray-700">22</td>
-              <td className="px-6 py-4 align-middle text-gray-700">34 mins</td>
-              <td className="px-6 py-4 align-middle text-gray-700">{biochemistryStaff} Staff</td>
-              <td className="px-6 py-4 align-middle">
-                <span
-                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    biochemistryStaff < 2
-                      ? 'bg-red-50 text-red-700 border border-red-100'
-                      : 'bg-emerald-50 text-emerald-700 border border-emerald-100'
-                  }`}
-                >
-                  {biochemistryStaff < 2 ? 'Staffing Alert' : 'Healthy'}
-                </span>
-              </td>
-            </tr>
+            {departments.map((dept) => {
+              const currentStaff = dept.name === 'Biochemistry' ? biochemistryStaff : dept.name === 'Hematology' ? hematologyStaff : dept.name === 'Radiology' ? radiologyStaff : microbiologyStaff
+              const isAlert = dept.name === 'Biochemistry' && currentStaff < 2
 
-            <tr className="hover:bg-gray-50/50 transition-colors">
-              <td className="px-6 py-4 align-middle">
-                <strong className="font-semibold text-gray-900">Hematology</strong>
-              </td>
-              <td className="px-6 py-4 align-middle text-gray-700">8</td>
-              <td className="px-6 py-4 align-middle text-gray-700">18 mins</td>
-              <td className="px-6 py-4 align-middle text-gray-700">{hematologyStaff} Staff</td>
-              <td className="px-6 py-4 align-middle">
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">
-                  Optimal
-                </span>
-              </td>
-            </tr>
-
-            <tr className="hover:bg-gray-50/50 transition-colors">
-              <td className="px-6 py-4 align-middle">
-                <strong className="font-semibold text-gray-900">Radiology</strong>
-              </td>
-              <td className="px-6 py-4 align-middle text-gray-700">2</td>
-              <td className="px-6 py-4 align-middle text-gray-700">45 mins</td>
-              <td className="px-6 py-4 align-middle text-gray-700">{radiologyStaff} Staff</td>
-              <td className="px-6 py-4 align-middle">
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">
-                  Optimal
-                </span>
-              </td>
-            </tr>
-
-            <tr className="hover:bg-gray-50/50 transition-colors">
-              <td className="px-6 py-4 align-middle">
-                <strong className="font-semibold text-gray-900">Microbiology</strong>
-              </td>
-              <td className="px-6 py-4 align-middle text-gray-700">4</td>
-              <td className="px-6 py-4 align-middle text-gray-700">72 mins</td>
-              <td className="px-6 py-4 align-middle text-gray-700">{microbiologyStaff} Staff</td>
-              <td className="px-6 py-4 align-middle">
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">
-                  Optimal
-                </span>
-              </td>
-            </tr>
+              return (
+                <tr key={dept.name} className="hover:bg-gray-50/50 transition-colors">
+                  <td className="px-6 py-4 align-middle">
+                    <strong className="font-semibold text-gray-900">{dept.name}</strong>
+                  </td>
+                  <td className="px-6 py-4 align-middle text-gray-700">{dept.pendingSamples}</td>
+                  <td className="px-6 py-4 align-middle text-gray-700">{dept.avgProcessTime}</td>
+                  <td className="px-6 py-4 align-middle text-gray-700">{currentStaff} Staff</td>
+                  <td className="px-6 py-4 align-middle">
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        isAlert
+                          ? 'bg-red-50 text-red-700 border border-red-100'
+                          : 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                      }`}
+                    >
+                      {isAlert ? 'Staffing Alert' : dept.status || 'Optimal'}
+                    </span>
+                  </td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </div>

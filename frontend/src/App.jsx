@@ -9,6 +9,8 @@ import SampleCollectorPortal from './pages/samplecollector/SampleCollectorPortal
 import ReceptionistPortal from './pages/receptionist/ReceptionistPortal'
 import RegisterPage from './pages/RegisterPage'
 import LoginPage from './pages/LoginPage'
+import ProfilePage from './pages/ProfilePage'
+import SettingsPage from './pages/SettingsPage'
 
 export default function App() {
   const { view } = useLims()
@@ -32,6 +34,10 @@ export default function App() {
       return <RegisterPage />
     case 'login':
       return <LoginPage />
+    case 'profile':
+      return <ProfilePage />
+    case 'settings':
+      return <SettingsPage />
     default:
       return <LandingPage />
   }

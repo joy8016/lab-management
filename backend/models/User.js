@@ -36,6 +36,11 @@ const userSchema = new mongoose.Schema(
       },
       required: [true, 'Role is required'],
     },
+    status: {
+      type: String,
+      enum: ['Active', 'Suspended'],
+      default: 'Active',
+    },
   },
   {
     timestamps: true,

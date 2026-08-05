@@ -1,6 +1,10 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import axios from 'axios'
+import { useLims } from '../../../context/LimsContext'
 
 export default function PricingBilling() {
+  const { testCatalog } = useLims()
+
   // Active Sub-Tab: 'analytics' | 'pricing-matrix' | 'b2b-billing' | 'gateways' | 'policies'
   const [activeSubTab, setActiveSubTab] = useState('analytics')
 
@@ -12,21 +16,21 @@ export default function PricingBilling() {
   }
 
   // 1. REVENUE METRICS DATA
-  const revenueSummary = {
+  const [revenueSummary, setRevenueSummary] = useState({
     grossRevenue: '$248,500.00',
     netRevenue: '$218,200.00',
     receivables: '$30,300.00',
     refunds: '$1,450.00',
     growth: '+14.2% vs last month'
-  }
+  })
 
-  const branchRevenue = [
+  const [branchRevenue, setBranchRevenue] = useState([
     { name: 'Main Lab HQ', revenue: '$112,400', percentage: '45.2%', invoices: 1420, margin: '68%' },
     { name: 'City Clinic Branch', revenue: '$64,800', percentage: '26.1%', invoices: 890, margin: '62%' },
     { name: 'Mary Lab Branch', revenue: '$38,200', percentage: '15.4%', invoices: 510, margin: '58%' },
     { name: 'Twin Lab Branch', revenue: '$21,100', percentage: '8.5%', invoices: 290, margin: '55%' },
     { name: 'July Lab Branch', revenue: '$12,000', percentage: '4.8%', invoices: 160, margin: '52%' }
-  ]
+  ])
 
   const topTests = [
     { code: 'EXC-901', name: 'Executive Health Checkup Package', volume: 450, totalRevenue: '$67,500', avgPrice: '$150', margin: '74%' },
@@ -47,6 +51,22 @@ export default function PricingBilling() {
     { id: 7, code: 'SER-601', name: 'Thyroid Stimulating Hormone (TSH)', category: 'Serology', basePrice: 30, isPackage: false, cityMultiplier: 1.1, discount: '0%' },
     { id: 8, code: 'EXC-901', name: 'Executive Health Checkup Package', category: 'Multi-Department', basePrice: 150, isPackage: true, cityMultiplier: 1.15, discount: '25%' }
   ])
+
+  useEffect(() => {
+    const fetchPricingData = async () => {
+      try {
+        const { data } = await axios.get('/api/superadmin/pricing-billing')
+        if (data.success && data.data) {
+          if (data.data.revenueSummary) setRevenueSummary(data.data.revenueSummary)
+          if (data.data.branchRevenue) setBranchRevenue(data.data.branchRevenue)
+          if (data.data.tests && data.data.tests.length > 0) setPricingMatrix(data.data.tests)
+        }
+      } catch (error) {
+        console.error('Error fetching pricing data:', error)
+      }
+    }
+    fetchPricingData()
+  }, [])
 
   const [editingPriceItem, setEditingPriceItem] = useState(null)
 
@@ -354,36 +374,41 @@ export default function PricingBilling() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 font-medium text-gray-700">
-                {pricingMatrix.map((item) => (
-                  <tr key={item.id} className="hover:bg-blue-50/30 transition-colors">
-                    <td className="py-3 px-4 font-mono font-bold text-blue-700">{item.code}</td>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-gray-900">{item.name}</span>
-                        {item.isPackage && (
-                          <span className="bg-indigo-100 text-indigo-800 text-[9px] font-black px-2 py-0.5 rounded-full uppercase">Bundle</span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 text-gray-600">{item.category}</td>
-                    <td className="py-3 px-4 font-extrabold text-gray-900">${item.basePrice.toFixed(2)}</td>
-                    <td className="py-3 px-4 text-gray-700 font-bold">{item.cityMultiplier}x (+{((item.cityMultiplier - 1)*100).toFixed(0)}%)</td>
-                    <td className="py-3 px-4 text-gray-700 font-semibold">${(item.basePrice * item.cityMultiplier).toFixed(2)}</td>
-                    <td className="py-3 px-4">
-                      <span className="bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded border border-emerald-100 text-[10px]">
-                        {item.discount}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-right">
-                      <button
-                        onClick={() => setEditingPriceItem({ ...item })}
-                        className="text-[10px] font-bold text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
-                      >
-                        Adjust Pricing
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {pricingMatrix.map((item) => {
+                  const bPrice = typeof item.basePrice === 'number' ? item.basePrice : parseFloat(item.basePrice) || 50
+                  const mult = typeof item.cityMultiplier === 'number' ? item.cityMultiplier : parseFloat(item.cityMultiplier) || 1.1
+
+                  return (
+                    <tr key={item.id || item._id} className="hover:bg-blue-50/30 transition-colors">
+                      <td className="py-3 px-4 font-mono font-bold text-blue-700">{item.code}</td>
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-gray-900">{item.name}</span>
+                          {item.isPackage && (
+                            <span className="bg-indigo-100 text-indigo-800 text-[9px] font-black px-2 py-0.5 rounded-full uppercase">Bundle</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-gray-600">{item.category}</td>
+                      <td className="py-3 px-4 font-extrabold text-gray-900">${bPrice.toFixed(2)}</td>
+                      <td className="py-3 px-4 text-gray-700 font-bold">{mult}x (+{((mult - 1)*100).toFixed(0)}%)</td>
+                      <td className="py-3 px-4 text-gray-700 font-semibold">${(bPrice * mult).toFixed(2)}</td>
+                      <td className="py-3 px-4">
+                        <span className="bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded border border-emerald-100 text-[10px]">
+                          {item.discount || '0%'}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-right">
+                        <button
+                          onClick={() => setEditingPriceItem({ ...item, basePrice: bPrice, cityMultiplier: mult })}
+                          className="text-[10px] font-bold text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+                        >
+                          Adjust Pricing
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>

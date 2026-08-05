@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import HeaderUserDropdown from '../../../components/HeaderUserDropdown'
 
 // Header SVG Icons
 const BackArrowIcon = () => (
@@ -151,28 +152,9 @@ export default function Header({ onLogout, onBack, onOpenProfile }) {
           </button>
         </div>
 
-        {/* Profile drop and Logout button */}
+        {/* Profile drop and Settings / Logout button */}
         <div className="flex items-center gap-2 border-l border-gray-100 pl-4">
-          <button 
-            className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-blue-50/60 transition-colors text-left cursor-pointer group"
-            onClick={onOpenProfile}
-            title="View Super Admin Profile"
-          >
-            <div className="w-7 h-7 rounded-full bg-blue-100 text-blue-800 flex items-center justify-center font-bold text-xs uppercase border border-blue-200 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-              SA
-            </div>
-            <div className="leading-none hidden sm:block">
-              <div className="text-xs font-bold text-gray-800 group-hover:text-blue-700 transition-colors">Profile</div>
-              <div className="text-[9px] text-gray-400 font-bold mt-0.5 uppercase tracking-wide">Root</div>
-            </div>
-          </button>
-
-          <button 
-            className="text-xs font-semibold text-gray-500 hover:text-red-600 px-3 py-1.5 rounded-xl hover:bg-red-50 transition-all cursor-pointer border border-transparent"
-            onClick={onLogout}
-          >
-            Logout
-          </button>
+          <HeaderUserDropdown />
         </div>
       </div>
 

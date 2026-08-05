@@ -1,5 +1,6 @@
 import React from 'react'
 import { useLims } from '../../../context/LimsContext'
+import HeaderUserDropdown from '../../../components/HeaderUserDropdown'
 
 const BackArrowIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-white">
@@ -58,24 +59,7 @@ export default function Header({ onBack }) {
       </div>
 
       {/* Right Tools: Profile + Gear + Logout */}
-      <div className="flex items-center gap-4 text-xs">
-        <div className="flex items-center gap-2 cursor-pointer hover:opacity-90 transition">
-          <UserCircleIcon />
-          <span className="font-bold text-white">{user?.fullName || 'Sarah Jones'} ⌄</span>
-        </div>
-
-        <button className="p-1 hover:opacity-80 transition cursor-pointer" title="Settings">
-          <GearIcon />
-        </button>
-
-        <button
-          onClick={logoutUser}
-          className="p-1 hover:opacity-80 transition cursor-pointer"
-          title="Logout"
-        >
-          <LogoutIcon />
-        </button>
-      </div>
+      <HeaderUserDropdown />
     </header>
   )
 }

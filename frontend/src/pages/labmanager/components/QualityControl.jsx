@@ -1,6 +1,17 @@
 import React from 'react'
+import { useLims } from '../../../context/LimsContext'
 
 export default function QualityControl() {
+  const { qualityControl } = useLims()
+
+  // Fallback initial list if DB state is loading
+  const records = qualityControl && qualityControl.length > 0 ? qualityControl : [
+    { id: '1', instrumentName: 'Biochemistry Analyzer - Beckman Coulter', percentage: '99.8%', statusText: 'Status: Calibrated & Certified', dueDateText: 'Next Due: In 22 Days', value: 99.8, status: 'Pass' },
+    { id: '2', instrumentName: 'Hematology Cell Counter - Sysmex XN', percentage: '94.2%', statusText: 'Status: Deviation Detected', dueDateText: 'Next Due: In 4 Days (Urgent)', value: 94.2, status: 'Warning' },
+    { id: '3', instrumentName: 'Microbiology Incubator - Memmert IN30', percentage: '100%', statusText: 'Status: Optimal Stability', dueDateText: 'Next Due: In 60 Days', value: 100, status: 'Pass' },
+    { id: '4', instrumentName: 'PCR Thermal Cycler - Bio-Rad CFX', percentage: '81.5%', statusText: 'Status: Out of Calibration', dueDateText: 'Calibration Required Immediately', value: 81.5, status: 'Fail' },
+  ]
+
   return (
     <div className="space-y-6">
       <div className="border-b border-gray-100 pb-5">
@@ -13,61 +24,28 @@ export default function QualityControl() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col gap-3 hover:shadow-md transition-all">
-          <div className="flex justify-between items-start text-sm font-bold text-gray-800">
-            <span>Biochemistry Analyzer - Beckman Coulter</span>
-            <span className="text-emerald-600 font-extrabold">99.8%</span>
-          </div>
-          <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-            <div className="h-full rounded-full bg-emerald-500" style={{ width: '99.8%' }}></div>
-          </div>
-          <div className="flex justify-between text-xs text-gray-500 mt-1">
-            <span>Status: Calibrated &amp; Certified</span>
-            <span>Next Due: In 22 Days</span>
-          </div>
-        </div>
+        {records.map((qc) => {
+          const isWarning = qc.status === 'Warning'
+          const isFail = qc.status === 'Fail'
+          const barColor = isFail ? 'bg-red-500 animate-pulse' : isWarning ? 'bg-amber-500' : 'bg-emerald-500'
+          const textColor = isFail ? 'text-red-600' : isWarning ? 'text-amber-600' : 'text-emerald-600'
 
-        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col gap-3 hover:shadow-md transition-all">
-          <div className="flex justify-between items-start text-sm font-bold text-gray-800">
-            <span>Hematology Cell Counter - Sysmex XN</span>
-            <span className="text-amber-600 font-extrabold">94.2%</span>
-          </div>
-          <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-            <div className="h-full rounded-full bg-amber-500" style={{ width: '94.2%' }}></div>
-          </div>
-          <div className="flex justify-between text-xs text-gray-500 mt-1">
-            <span>Status: Deviation Detected</span>
-            <span className="text-amber-600 font-semibold">Next Due: In 4 Days (Urgent)</span>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col gap-3 hover:shadow-md transition-all">
-          <div className="flex justify-between items-start text-sm font-bold text-gray-800">
-            <span>Microbiology incubator - Memmert IN30</span>
-            <span className="text-emerald-600 font-extrabold">100%</span>
-          </div>
-          <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-            <div className="h-full rounded-full bg-emerald-500" style={{ width: '100%' }}></div>
-          </div>
-          <div className="flex justify-between text-xs text-gray-500 mt-1">
-            <span>Status: Optimal Stability</span>
-            <span>Next Due: In 60 Days</span>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col gap-3 hover:shadow-md transition-all">
-          <div className="flex justify-between items-start text-sm font-bold text-gray-800">
-            <span>PCR Thermal Cycler - Bio-Rad CFX</span>
-            <span className="text-red-600 font-extrabold">81.5%</span>
-          </div>
-          <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-            <div className="h-full rounded-full bg-red-500 animate-pulse" style={{ width: '81.5%' }}></div>
-          </div>
-          <div className="flex justify-between text-xs text-gray-500 mt-1">
-            <span>Status: Out of Calibration</span>
-            <span className="text-red-600 font-semibold">Calibration Required Immediately</span>
-          </div>
-        </div>
+          return (
+            <div key={qc.id || qc._id} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col gap-3 hover:shadow-md transition-all">
+              <div className="flex justify-between items-start text-sm font-bold text-gray-800">
+                <span>{qc.instrumentName}</span>
+                <span className={`${textColor} font-extrabold`}>{qc.percentage}</span>
+              </div>
+              <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div className={`h-full rounded-full ${barColor}`} style={{ width: qc.percentage }}></div>
+              </div>
+              <div className="flex justify-between text-xs text-gray-500 mt-1">
+                <span>{qc.statusText}</span>
+                <span className={isFail || isWarning ? `${textColor} font-semibold` : ''}>{qc.dueDateText}</span>
+              </div>
+            </div>
+          )
+        })}
       </div>
     </div>
   )

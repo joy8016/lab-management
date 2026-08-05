@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useLims } from '../../../context/LimsContext'
 
 export default function StaffScheduling({ deptStaffCount }) {
-  const { roster, addShift, setRoster } = useLims()
+  const { roster, addShift, removeShift } = useLims()
   const biochemistryStaffCount = deptStaffCount('Biochemistry')
 
   // Local form state
@@ -137,7 +137,7 @@ export default function StaffScheduling({ deptStaffCount }) {
                   <td className="px-6 py-4 align-middle">
                     <button 
                       className="px-2.5 py-1 bg-red-50 text-red-600 border border-red-100 rounded-lg text-xs font-semibold hover:bg-red-100 hover:text-red-700 transition-colors cursor-pointer"
-                      onClick={() => alert("Note: Technician scheduling records are monitored globally.")}
+                      onClick={() => removeShift(staff.id || staff._id)}
                     >
                       Remove
                     </button>

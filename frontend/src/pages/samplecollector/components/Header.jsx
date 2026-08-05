@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useLims } from '../../../context/LimsContext'
+import HeaderUserDropdown from '../../../components/HeaderUserDropdown'
 
 const BellIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
@@ -53,7 +54,7 @@ export default function Header({ onBack }) {
         </div>
       </div>
 
-      {/* Right Tools: Bell + Profile Avatar + Logout */}
+      {/* Right Tools: Bell + User Dropdown */}
       <div className="flex items-center gap-3 self-end sm:self-center">
         {/* Notifications Button */}
         <div className="relative">
@@ -84,24 +85,7 @@ export default function Header({ onBack }) {
           )}
         </div>
 
-        {/* User Avatar */}
-        <div
-          className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-black text-xs sm:text-sm tracking-wider shadow-sm border shrink-0"
-          style={{ backgroundColor: '#0c4a6e', borderColor: '#0284c7', color: '#bae6fd' }}
-          title={fullName}
-        >
-          {initials}
-        </div>
-
-        {/* Logout Button */}
-        {logoutUser && (
-          <button
-            onClick={logoutUser}
-            className="px-3 py-1.5 rounded-xl text-xs font-bold text-gray-400 hover:text-rose-400 transition-colors cursor-pointer"
-          >
-            Logout
-          </button>
-        )}
+        <HeaderUserDropdown />
       </div>
     </header>
   )

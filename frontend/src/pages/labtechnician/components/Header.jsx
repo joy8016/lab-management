@@ -1,5 +1,6 @@
 import React from 'react'
 import { useLims } from '../../../context/LimsContext'
+import HeaderUserDropdown from '../../../components/HeaderUserDropdown'
 
 const BackArrowIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
@@ -70,24 +71,8 @@ export default function Header({ onBack }) {
       </div>
 
       {/* Right: User status & Tools */}
-      <div className="flex items-center gap-5">
-        <div className="text-xs opacity-80 font-medium hidden md:block">
-          Logged in: <span className="font-bold opacity-100">{user ? user.fullName : 'Sarah J.'} (Lab Technician)</span>
-        </div>
-
-        <button className="relative hover:opacity-80 transition cursor-pointer p-1">
-          <ChatIcon />
-          <span className="absolute top-0 right-0 w-1.5 h-1.5 rounded-full bg-sky-400" />
-        </button>
-
-        <button className="relative hover:opacity-80 transition cursor-pointer p-1">
-          <BellIcon />
-          <span className="absolute top-0 right-0 w-3 h-3 rounded-full bg-red-500 text-white text-[8px] font-bold flex items-center justify-center">
-            1
-          </span>
-        </button>
-
-        <div className="relative w-40 md:w-48">
+      <div className="flex items-center gap-4">
+        <div className="relative w-40 md:w-48 hidden sm:block">
           <input
             type="text"
             placeholder="Search"
@@ -98,6 +83,8 @@ export default function Header({ onBack }) {
             <SearchIcon />
           </div>
         </div>
+
+        <HeaderUserDropdown />
       </div>
     </header>
   )

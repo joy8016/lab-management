@@ -66,7 +66,7 @@ export default function UsersManagement() {
             </thead>
             <tbody className="divide-y divide-gray-50 text-gray-700 font-medium">
               {filteredUsers.map((u) => (
-                <tr key={u.id} className="hover:bg-gray-50/20 transition-colors">
+                <tr key={u.id || u._id} className="hover:bg-gray-50/20 transition-colors">
                   <td className="px-4 py-3.5 align-middle">
                     <div className="text-left">
                       <div className="text-xs font-bold text-gray-900">{u.name}</div>
@@ -85,7 +85,7 @@ export default function UsersManagement() {
                   </td>
                   <td className="px-4 py-3.5 align-middle">
                     <button
-                      onClick={() => toggleUserStatus(u.id)}
+                      onClick={() => toggleUserStatus(u.id || u._id)}
                       className={`px-2.5 py-1.5 rounded-lg text-[10px] font-bold border transition-colors cursor-pointer ${
                         u.status === 'Active'
                           ? 'bg-red-50 hover:bg-red-100 text-red-600 border-red-100'

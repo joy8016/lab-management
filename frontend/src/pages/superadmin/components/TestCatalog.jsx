@@ -1,6 +1,8 @@
 import React, { useState } from 'react'
+import { useLims } from '../../../context/LimsContext'
 
 export default function TestCatalog() {
+  const { testCatalog, addTestCatalogItem } = useLims()
   // Initial Mock Test Catalog Data
   const initialTests = [
     {
@@ -180,7 +182,10 @@ export default function TestCatalog() {
     }
   ]
 
+  const activeCatalog = testCatalog && testCatalog.length > 0 ? testCatalog : initialTests
   const [tests, setTests] = useState(initialTests)
+
+  const catalogList = testCatalog && testCatalog.length > 0 ? testCatalog : tests
 
   // Filtering & Search State
   const [searchTerm, setSearchTerm] = useState('')
@@ -244,10 +249,8 @@ export default function TestCatalog() {
     branches: ['Main Lab HQ', 'City Clinic'],
     subTests: ['Fasting Blood Sugar (FBS)', 'Lipid Profile Panel']
   }
-  const [panelForm, setPanelForm] = useState(emptyPanelForm)
-
-  // Filter Logic
-  const filteredTests = tests.filter((t) => {
+  const [panelForm, setPanelForm] = useState(emptyPanelForm)  // Filter Logic
+  const filteredTests = catalogList.filter((t) => {
     const matchesSearch =
       t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       t.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -317,9 +320,9 @@ export default function TestCatalog() {
   // Toggle Test Status
   const handleToggleStatus = (id) => {
     setTests((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, status: t.status === 'Active' ? 'Suspended' : 'Active' } : t))
+      prev.map((t) => (t.id === id || t._id === id ? { ...t, status: t.status === 'Active' ? 'Suspended' : 'Active' } : t))
     )
-    const target = tests.find((t) => t.id === id)
+    const target = catalogList.find((t) => t.id === id || t._id === id)
     showToast(`Status updated to ${target?.status === 'Active' ? 'Suspended' : 'Active'} for ${target?.code}`)
   }
 
@@ -329,21 +332,22 @@ export default function TestCatalog() {
     if (editingTest) {
       setTests((prev) =>
         prev.map((t) =>
-          t.id === editingTest.id
+          (t.id === editingTest.id || t._id === editingTest._id)
             ? { ...t, ...testForm, isPanel: false }
             : t
         )
       )
       showToast(`Test ${testForm.code} updated successfully!`)
     } else {
+      addTestCatalogItem(testForm)
       const newTest = {
         id: Date.now(),
         ...testForm,
         isPanel: false,
-        reportOrder: tests.length + 1
+        reportOrder: catalogList.length + 1
       }
       setTests((prev) => [newTest, ...prev])
-      showToast(`New test ${testForm.name} (${testForm.code}) registered successfully!`)
+      showToast(`New test ${testForm.name} (${testForm.code}) registered successfully in database!`)
     }
     setIsTestModalOpen(false)
     setEditingTest(null)

@@ -55,10 +55,13 @@ const ArrowRightIcon = () => (
 )
 
 export default function DashboardOverview({ setActiveTab }) {
-  const { users, inventoryRequests } = useLims()
+  const { users, testCatalog, inventoryRequests, dashboardStats } = useLims()
 
-  // Calculate dynamic approvals size based on the pending items
-  const pendingApprovalsCount = inventoryRequests.filter((r) => r.status === 'Pending').length
+  // Calculate dynamic approvals size based on the pending items or database stats
+  const activeUsersCount = dashboardStats?.activeUsersCount || users?.filter((u) => u.status === 'Active')?.length || 132
+  const totalTestsCount = dashboardStats?.totalTestsCount || testCatalog?.length || 1690
+  const pendingApprovalsCount = dashboardStats?.pendingApprovalsCount || inventoryRequests?.filter((r) => r.status === 'Pending')?.length || 20
+  const securityAlertsCount = dashboardStats?.securityAlertsCount || 0
 
   // Chart values (blue height, green height) for the branches monthly test volume
   const chartData = [
@@ -72,15 +75,11 @@ export default function DashboardOverview({ setActiveTab }) {
     { branch: 'City Clinic', val1: 360, val2: 230 }
   ]
 
-  // Audit Logs static table data
-  const auditLogs = [
-    { time: '13:55 AM', action: 'Admin X updated reference range for Test Y', entity: 'Test Y' },
-    { time: '13:55 PM', action: 'Admin X updated reference range for Test Y', entity: 'Test Y' },
-    { time: '13:55 AM', action: 'Admin X updated reference range for Test Y', entity: 'Test Y' },
-    { time: '13:56 PM', action: 'Admin X updated reference range for Test Y', entity: 'Test Y' },
-    { time: '13:56 PM', action: 'Admin Y updated reference range for Test Y', entity: 'Test Y' },
-    { time: '13:57 PM', action: 'Admin Z authorized branch configuration changes', entity: 'Branch C' },
-    { time: '13:58 PM', action: 'Admin X activated user portal permissions', entity: 'User B' }
+  // Audit Logs feed from MongoDB
+  const auditLogs = dashboardStats?.auditLogs || [
+    { time: '10:55 AM', action: 'Admin X updated reference range for Test Y', entity: 'Test Y' },
+    { time: '10:42 AM', action: 'Provisioned new Lab Technician account', entity: 'User: Charlie Davis' },
+    { time: '09:30 AM', action: 'Approved affiliate center registration', entity: 'Branch: Main Lab HQ' },
   ]
 
   return (
@@ -99,7 +98,7 @@ export default function DashboardOverview({ setActiveTab }) {
           </div>
           <div className="flex justify-between items-end mt-4">
             <div>
-              <span className="text-2xl font-black text-gray-900 leading-none block">132</span>
+              <span className="text-2xl font-black text-gray-900 leading-none block">{activeUsersCount}</span>
               <span className="text-[10px] font-bold text-gray-400 block mt-1 uppercase tracking-wide">count</span>
             </div>
             {/* Sparkline trend representation */}
@@ -121,15 +120,9 @@ export default function DashboardOverview({ setActiveTab }) {
         <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
           <div className="flex justify-between items-start">
             <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider block">Total Tests Cataloged</span>
-            <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center border border-blue-100">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="w-4 h-4">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                <polyline points="14 2 14 8 20 8" />
-              </svg>
-            </div>
           </div>
           <div className="mt-4">
-            <span className="text-2xl font-black text-gray-900 leading-none block">1,690</span>
+            <span className="text-2xl font-black text-gray-900 leading-none block">{totalTestsCount}</span>
             <span className="text-[10px] font-bold text-gray-400 block mt-1 uppercase tracking-wide">catalog size</span>
           </div>
         </div>

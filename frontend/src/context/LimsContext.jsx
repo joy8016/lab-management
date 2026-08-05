@@ -20,87 +20,169 @@ export function LimsProvider({ children }) {
 
   // Pathologist: Cases Queue State
   const [cases, setCases] = useState([
-    { id: 'PT98765', patientName: 'PT98765***', type: 'Example', urgency: 'Urgent', time: 'Today 11:38 AM', status: 'Technician Submitted' },
+    { id: 'PT98765', patientName: 'PT98765***', type: 'Example', urgency: 'Urgent', time: 'Today 11:38 AM', status: 'Signed & Finalized' },
     { id: 'PT98766', patientName: 'PT98765***', type: 'Case Case', urgency: 'Urgent', time: 'Today 11:38 AM', status: 'Technician Submitted' },
-    { id: 'PT98764', patientName: 'PT98764', type: 'Example', urgency: 'Urgent', time: 'Today 11:30 AM', status: 'Technician Submitted' },
-    { id: 'PT98765-2', patientName: 'PT98765', type: 'Example', urgency: 'Urgent', time: 'Today 11:30 AM', status: 'Technician Submitted' },
+    { id: 'PT98784', patientName: 'PT98784', type: 'Example', urgency: 'Urgent', time: 'Today 11:30 AM', status: 'Technician Submitted' },
+    { id: 'PT98785', patientName: 'PT98785', type: 'Example', urgency: 'Urgent', time: 'Today 11:30 AM', status: 'Technician Submitted' },
     { id: 'PT98767', patientName: 'PT98767**', type: 'Man Lab', urgency: 'Urgent', time: 'Today 11:30 AM', status: 'Technician Submitted' },
     { id: 'PT98763', patientName: 'PT98763', type: 'Example', urgency: 'Urgent', time: 'Today 11:30 AM', status: 'Technician Submitted' }
   ])
 
   // Lab Manager: Roster Schedule State
-  const [roster, setRoster] = useState([
-    { id: 1, name: 'Dr. Sarah Jenkins', dept: 'Hematology', shift: 'Morning' },
-    { id: 2, name: 'Robert Chen', dept: 'Biochemistry', shift: 'Evening' },
-    { id: 3, name: 'Jane Doe', dept: 'Radiology', shift: 'Night' },
-    { id: 4, name: 'Elena Rostova', dept: 'Microbiology', shift: 'Morning' }
-  ])
+  const [roster, setRoster] = useState([])
 
   // Lab Manager: Inventory / Reagent Requests State
-  const [inventoryRequests, setInventoryRequests] = useState([
-    { id: 'REQ-201', item: 'CBC Reagent Kits', qty: 50, requester: 'T. Miller', status: 'Pending' },
-    { id: 'REQ-202', item: 'Blood Collection Tubes (Lavender)', qty: 100, requester: 'V. Patel', status: 'Pending' },
-    { id: 'REQ-203', item: 'PCR Diagnostic Cartridges', qty: 30, requester: 'L. Gomez', status: 'Pending' },
-    { id: 'REQ-204', item: 'Sterile Swabs & Media Kits', qty: 200, requester: 'J. Smith', status: 'Approved' }
-  ])
+  const [inventoryRequests, setInventoryRequests] = useState([])
 
-  // Super Admin: Affiliate Branches list
-  const [branches, setBranches] = useState([
-    { id: 1, name: 'Main Lab HQ', address: '102 Medical Drive', city: 'Metropolis', staff: 14, status: 'Active' },
-    { id: 2, name: 'City Clinic', address: '405 Plaza Ave Suite 4', city: 'Metropolis', staff: 6, status: 'Active' },
-    { id: 3, name: 'Mary Lab', address: '98 St. Mary Street', city: 'Gotham', staff: 5, status: 'Active' },
-    { id: 4, name: 'Twin Lab', address: '881 Twin Peaks Road', city: 'Twin Peaks', staff: 4, status: 'Active' },
-    { id: 5, name: 'July Lab', address: '501 Summer Blvd', city: 'Star City', staff: 8, status: 'Active' }
-  ])
+  // Lab Manager: Quality Control & Operations State
+  const [qualityControl, setQualityControl] = useState([])
+  const [operationsOverview, setOperationsOverview] = useState(null)
 
-  // Super Admin: Users/Employees account list
-  const [users, setUsers] = useState([
-    { id: 1, name: 'Alice Smith', email: 'alice@lims.org', role: 'Lab Manager', status: 'Active' },
-    { id: 2, name: 'Bob Johnson', email: 'bob@lims.org', role: 'Pathologist', status: 'Active' },
-    { id: 3, name: 'Charlie Davis', email: 'charlie@lims.org', role: 'Lab Technician', status: 'Active' },
-    { id: 4, name: 'Diana Prince', email: 'diana@lims.org', role: 'Receptionist', status: 'Active' },
-    { id: 5, name: 'Evan Wright', email: 'evan@lims.org', role: 'Sample Collector', status: 'Suspended' }
-  ])
+  // Fetch Lab Manager Data from MongoDB Database
+  const fetchLabManagerData = async () => {
+    try {
+      const [invRes, rosterRes, qcRes, opsRes] = await Promise.all([
+        axios.get('/api/labmanager/inventory-requests'),
+        axios.get('/api/labmanager/roster'),
+        axios.get('/api/labmanager/quality-control'),
+        axios.get('/api/labmanager/operations-overview'),
+      ])
 
-  // Action Handlers
-  const addShift = (name, dept, shift) => {
-    const newRosterItem = { id: Date.now(), name, dept, shift }
-    setRoster((prev) => [...prev, newRosterItem])
-  }
-
-  const approveRequest = (id) => {
-    setInventoryRequests((prev) =>
-      prev.map((req) => (req.id === id ? { ...req, status: 'Approved' } : req))
-    )
-  }
-
-  const rejectRequest = (id) => {
-    setInventoryRequests((prev) =>
-      prev.map((req) => (req.id === id ? { ...req, status: 'Rejected' } : req))
-    )
-  }
-
-  const addBranch = (name, address, city) => {
-    const newBranch = {
-      id: branches.length + 1,
-      name,
-      address,
-      city,
-      staff: 1,
-      status: 'Active'
+      if (invRes.data.success) setInventoryRequests(invRes.data.data)
+      if (rosterRes.data.success) setRoster(rosterRes.data.data)
+      if (qcRes.data.success) setQualityControl(qcRes.data.data)
+      if (opsRes.data.success) setOperationsOverview(opsRes.data.data)
+    } catch (error) {
+      console.error('Error fetching Lab Manager database data:', error)
     }
-    setBranches((prev) => [...prev, newBranch])
   }
 
-  const toggleUserStatus = (id) => {
-    setUsers((prev) =>
-      prev.map((u) => (u.id === id ? { ...u, status: u.status === 'Active' ? 'Suspended' : 'Active' } : u))
-    )
+  useEffect(() => {
+    fetchLabManagerData()
+  }, [view])
+
+  // Super Admin: State
+  const [branches, setBranches] = useState([])
+  const [users, setUsers] = useState([])
+  const [testCatalog, setTestCatalog] = useState([])
+  const [dashboardStats, setDashboardStats] = useState(null)
+
+  // Fetch Super Admin Data from MongoDB Database
+  const fetchSuperAdminData = async () => {
+    try {
+      const [branchesRes, usersRes, testRes, statsRes] = await Promise.all([
+        axios.get('/api/superadmin/branches'),
+        axios.get('/api/superadmin/users'),
+        axios.get('/api/superadmin/test-catalog'),
+        axios.get('/api/superadmin/dashboard-stats'),
+      ])
+
+      if (branchesRes.data.success) setBranches(branchesRes.data.data)
+      if (usersRes.data.success) setUsers(usersRes.data.data)
+      if (testRes.data.success) setTestCatalog(testRes.data.data)
+      if (statsRes.data.success) setDashboardStats(statsRes.data.data)
+    } catch (error) {
+      console.error('Error fetching Super Admin database data:', error)
+    }
   }
 
-  const addUser = (name, email, role) => {
-    const newUser = { id: users.length + 1, name, email, role, status: 'Active' }
-    setUsers((prev) => [...prev, newUser])
+  useEffect(() => {
+    fetchLabManagerData()
+    fetchSuperAdminData()
+  }, [view])
+
+  // Lab Manager Action Handlers backed by MongoDB
+  const addShift = async (name, dept, shift) => {
+    try {
+      const { data } = await axios.post('/api/labmanager/roster', { name, dept, shift })
+      if (data.success && data.data) {
+        setRoster((prev) => [data.data, ...prev])
+      }
+    } catch (error) {
+      console.error('Error adding shift to DB:', error)
+    }
+  }
+
+  const removeShift = async (id) => {
+    try {
+      await axios.delete(`/api/labmanager/roster/${id}`)
+      setRoster((prev) => prev.filter((item) => item.id !== id && item._id !== id))
+    } catch (error) {
+      console.error('Error removing shift from DB:', error)
+    }
+  }
+
+  const approveRequest = async (id) => {
+    try {
+      const { data } = await axios.put(`/api/labmanager/inventory-requests/${id}/approve`)
+      if (data.success) {
+        setInventoryRequests((prev) =>
+          prev.map((req) => ((req.id === id || req._id === id) ? { ...req, status: 'Approved' } : req))
+        )
+      }
+    } catch (error) {
+      console.error('Error approving request in DB:', error)
+    }
+  }
+
+  const rejectRequest = async (id) => {
+    try {
+      const { data } = await axios.put(`/api/labmanager/inventory-requests/${id}/reject`)
+      if (data.success) {
+        setInventoryRequests((prev) =>
+          prev.map((req) => ((req.id === id || req._id === id) ? { ...req, status: 'Rejected' } : req))
+        )
+      }
+    } catch (error) {
+      console.error('Error rejecting request in DB:', error)
+    }
+  }
+
+  // Super Admin Action Handlers backed by MongoDB
+  const addBranch = async (name, address, city) => {
+    try {
+      const { data } = await axios.post('/api/superadmin/branches', { name, address, city })
+      if (data.success && data.data) {
+        setBranches((prev) => [data.data, ...prev])
+      }
+    } catch (error) {
+      console.error('Error adding branch to DB:', error)
+    }
+  }
+
+  const toggleUserStatus = async (id) => {
+    try {
+      const { data } = await axios.put(`/api/superadmin/users/${id}/toggle-status`)
+      if (data.success) {
+        setUsers((prev) =>
+          prev.map((u) => ((u.id === id || u._id === id) ? { ...u, status: u.status === 'Active' ? 'Suspended' : 'Active' } : u))
+        )
+      }
+    } catch (error) {
+      console.error('Error toggling user status in DB:', error)
+    }
+  }
+
+  const addUser = async (name, email, role) => {
+    try {
+      const { data } = await axios.post('/api/superadmin/users', { name, email, role })
+      if (data.success && data.data) {
+        setUsers((prev) => [data.data, ...prev])
+      }
+    } catch (error) {
+      console.error('Error provisioning user in DB:', error)
+    }
+  }
+
+  const addTestCatalogItem = async (testObj) => {
+    try {
+      const { data } = await axios.post('/api/superadmin/test-catalog', testObj)
+      if (data.success && data.data) {
+        setTestCatalog((prev) => [data.data, ...prev])
+      }
+    } catch (error) {
+      console.error('Error adding test catalog item to DB:', error)
+    }
   }
 
   const signReport = (caseId) => {
@@ -262,14 +344,22 @@ export function LimsProvider({ children }) {
         signReport,
         roster,
         addShift,
+        removeShift,
         inventoryRequests,
         approveRequest,
         rejectRequest,
+        qualityControl,
+        operationsOverview,
+        fetchLabManagerData,
         branches,
         addBranch,
         users,
         toggleUserStatus,
-        addUser
+        addUser,
+        testCatalog,
+        addTestCatalogItem,
+        dashboardStats,
+        fetchSuperAdminData,
       }}
     >
       {children}
