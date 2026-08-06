@@ -89,7 +89,97 @@ export function LimsProvider({ children }) {
   useEffect(() => {
     fetchLabManagerData()
     fetchSuperAdminData()
+    fetchPathologistData()
   }, [view])
+
+  // Pathologist: API & MongoDB State
+  const [pathologyCases, setPathologyCases] = useState([])
+  const [testValidations, setTestValidations] = useState([])
+  const [auditLogs, setAuditLogs] = useState([])
+
+  const fetchPathologistData = async () => {
+    try {
+      const [casesRes, valRes, auditRes] = await Promise.all([
+        axios.get('/api/pathologist/cases'),
+        axios.get('/api/pathologist/validations'),
+        axios.get('/api/pathologist/audit-logs'),
+      ])
+
+      if (casesRes.data.success) setPathologyCases(casesRes.data.data)
+      if (valRes.data.success) setTestValidations(valRes.data.data)
+      if (auditRes.data.success) setAuditLogs(auditRes.data.data)
+    } catch (error) {
+      console.error('Error fetching Pathologist database data:', error)
+    }
+  }
+
+  const signPathologyReportDB = async (caseId, findings, testResults) => {
+    try {
+      const { data } = await axios.put(`/api/pathologist/cases/${caseId}/sign`, { findings, testResults })
+      if (data.success) {
+        setPathologyCases(prev => prev.map(c => (c.id === caseId || c._id === caseId ? { ...c, status: 'Signed & Finalized', findings: findings || c.findings } : c)))
+        fetchPathologistData()
+      }
+    } catch (error) {
+      console.error('Error signing pathology report in DB:', error)
+    }
+  }
+
+  const saveInterpretationDB = async (caseId, payload) => {
+    try {
+      const { data } = await axios.put(`/api/pathologist/cases/${caseId}/interpretation`, payload)
+      if (data.success) {
+        setPathologyCases(prev => prev.map(c => (c.id === caseId || c._id === caseId ? { ...c, ...payload } : c)))
+        fetchPathologistData()
+      }
+    } catch (error) {
+      console.error('Error saving interpretation in DB:', error)
+    }
+  }
+
+  const validateTestResultDB = async (valId) => {
+    try {
+      const { data } = await axios.put(`/api/pathologist/validations/${valId}/validate`)
+      if (data.success) {
+        setTestValidations(prev => prev.map(v => (v.id === valId ? { ...v, validated: true } : v)))
+      }
+    } catch (error) {
+      console.error('Error validating test result in DB:', error)
+    }
+  }
+
+  const batchValidateTestResultsDB = async (ids) => {
+    try {
+      const { data } = await axios.put('/api/pathologist/validations/batch-validate', { ids })
+      if (data.success) {
+        setTestValidations(prev => prev.map(v => (ids.includes(v.id) ? { ...v, validated: true } : v)))
+      }
+    } catch (error) {
+      console.error('Error batch validating test results in DB:', error)
+    }
+  }
+
+  const retestTestResultDB = async (valId) => {
+    try {
+      const { data } = await axios.put(`/api/pathologist/validations/${valId}/retest`)
+      if (data.success) {
+        setTestValidations(prev => prev.map(v => (v.id === valId ? { ...v, flag: 'RE-TEST ORDERED', qcStatus: 'RE-CALIBRATE' } : v)))
+      }
+    } catch (error) {
+      console.error('Error ordering retest in DB:', error)
+    }
+  }
+
+  const createAuditLogDB = async (logPayload) => {
+    try {
+      const { data } = await axios.post('/api/pathologist/audit-logs', logPayload)
+      if (data.success && data.data) {
+        setAuditLogs(prev => [data.data, ...prev])
+      }
+    } catch (error) {
+      console.error('Error creating audit log entry in DB:', error)
+    }
+  }
 
   // Lab Manager Action Handlers backed by MongoDB
   const addShift = async (name, dept, shift) => {
@@ -360,6 +450,16 @@ export function LimsProvider({ children }) {
         addTestCatalogItem,
         dashboardStats,
         fetchSuperAdminData,
+        pathologyCases,
+        testValidations,
+        auditLogs,
+        fetchPathologistData,
+        signPathologyReportDB,
+        saveInterpretationDB,
+        validateTestResultDB,
+        batchValidateTestResultsDB,
+        retestTestResultDB,
+        createAuditLogDB,
       }}
     >
       {children}

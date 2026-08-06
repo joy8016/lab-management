@@ -8,6 +8,7 @@ import authRoutes from "./routes/authRoutes.js";
 import labtechnician from "./routes/labtechnician.js";
 import labmanagerRoutes from "./routes/labmanagerRoutes.js";
 import superadminRoutes from "./routes/superadminRoutes.js";
+import pathologistRoutes from "./routes/pathologistRoutes.js";
 
 // Connect to MongoDB
 connectDB();
@@ -36,6 +37,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/labtechnician', labtechnician);
 app.use('/api/labmanager', labmanagerRoutes);
 app.use('/api/superadmin', superadminRoutes);
+app.use('/api/pathologist', pathologistRoutes);
 
 // Health check
 app.get("/health", (req, res) => {
