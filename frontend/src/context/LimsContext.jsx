@@ -1,8 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import axios from 'axios'
+import API from '../services/api'
 
-// Configure Axios defaults dynamically via environment variable (without hardcoding backend URL)
-axios.defaults.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+// Configure Axios defaults dynamically via environment variable or central API service
+const BACKEND_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'https://lab-management-caqg.onrender.com'
+axios.defaults.baseURL = BACKEND_URL
 axios.defaults.withCredentials = true
 
 const LimsContext = createContext()      

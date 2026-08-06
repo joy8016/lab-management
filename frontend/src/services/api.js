@@ -1,26 +1,31 @@
 import axios from 'axios';
 
-// Dynamically pick the backend URL depending on the build tool
-const BASE_URL = 
-  import.meta.env.VITE_API_BASE_URL ||  // For Vite
-
-  'http://localhost:5000/api';          // Fallback default
+// Dynamically pick backend API URL from environment variable with production fallback
+const BASE_URL =
+  import.meta.env.VITE_API_URL ||
+  import.meta.env.VITE_API_BASE_URL ||
+  'https://lab-management-caqg.onrender.com';
 
 const API = axios.create({
   baseURL: BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true, // Set to true if using cookies/sessions
+  withCredentials: true,
 });
 
-// Optional: Add request interceptors to automatically attach JWT Auth tokens
-API.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+// Interceptor to attach JWT Auth token automatically
+API.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('lims_token') || localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
   }
-  return config;
-});
+);
 
 export default API;
