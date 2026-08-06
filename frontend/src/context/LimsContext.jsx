@@ -1,12 +1,20 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import axios from 'axios'
-import API from '../services/api'
+import API, { getCleanBaseUrl } from '../services/api'
 
 // Configure Axios defaults dynamically via environment variable or central API service
 const rawBackendUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'https://lab-management-caqg.onrender.com'
-const BACKEND_URL = rawBackendUrl.replace(/\/api\/?$/i, '').replace(/\/+$/, '')
+const BACKEND_URL = getCleanBaseUrl(rawBackendUrl)
 axios.defaults.baseURL = BACKEND_URL
 axios.defaults.withCredentials = true
+
+// Global axios interceptor to guarantee no duplicate /api/api pathing
+axios.interceptors.request.use((config) => {
+  if (config.url && config.url.startsWith('/api/') && config.baseURL && config.baseURL.endsWith('/api')) {
+    config.url = config.url.replace(/^\/api/, '');
+  }
+  return config;
+});
 
 const LimsContext = createContext()      
 
