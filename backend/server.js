@@ -17,12 +17,21 @@ const app = express();
 
 // middlewares
 app.use(express.json());
+const isProduction = process.env.NODE_ENV === 'production';
+
+// 3. Conditional CORS Configuration
+const corsOptions = {
+  origin: isProduction 
+    ? process.env.CLIENT_URL // E.g., 'https://your-app.onrender.com' in production
+    : 'http://localhost:5173', // Local Vite/React frontend URL
+  credentials: true,
+};
 
 // Enable CORS for all frontends (landing page and three child portals)
 app.use(
   cors({  
       origin: [
-      "http://localhost:5173", // landing page
+      corsOptions // landing page
       
     ],
     credentials: true,
