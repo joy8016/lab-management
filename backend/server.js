@@ -19,24 +19,24 @@ const app = express();
 app.use(express.json());
 const isProduction = process.env.NODE_ENV === 'production';
 
-// 3. Conditional CORS Configuration
+// Dynamic CORS Configuration
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  process.env.CLIENT_URL,
+].filter(Boolean);
+
 const corsOptions = {
-  origin: isProduction 
-    ? process.env.CLIENT_URL // E.g., 'https://your-app.onrender.com' in production
-    : 'http://localhost:5173', // Local Vite/React frontend URL
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin) || !isProduction) {
+      return callback(null, true);
+    }
+    return callback(null, true);
+  },
   credentials: true,
 };
 
-// Enable CORS for all frontends (landing page and three child portals)
-app.use(
-  cors({  
-      origin: [
-      corsOptions // landing page
-      
-    ],
-    credentials: true,
-  })
-);
+app.use(cors(corsOptions));
 
 app.use(morgan("dev"));
 app.use(cookieParser());
