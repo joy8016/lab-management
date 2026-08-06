@@ -3,7 +3,8 @@ import axios from 'axios'
 import API from '../services/api'
 
 // Configure Axios defaults dynamically via environment variable or central API service
-const BACKEND_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'https://lab-management-caqg.onrender.com'
+const rawBackendUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'https://lab-management-caqg.onrender.com'
+const BACKEND_URL = rawBackendUrl.replace(/\/api\/?$/i, '').replace(/\/+$/, '')
 axios.defaults.baseURL = BACKEND_URL
 axios.defaults.withCredentials = true
 
