@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Helper function to clean base URL and prevent duplicate '/api/api' pathing
 export const getCleanBaseUrl = (urlStr) => {
-  if (!urlStr) return 'https://lab-management-caqg.onrender.com';
+  
   let clean = String(urlStr).trim().replace(/\/+$/, '');
   if (clean.toLowerCase().endsWith('/api')) {
     clean = clean.slice(0, -4);
@@ -12,8 +12,7 @@ export const getCleanBaseUrl = (urlStr) => {
 
 const rawUrl =
   import.meta.env.VITE_API_URL ||
-  import.meta.env.VITE_API_BASE_URL ||
-  'https://lab-management-caqg.onrender.com';
+  import.meta.env.VITE_API_BASE_URL 
 
 export const BASE_URL = getCleanBaseUrl(rawUrl);
 
