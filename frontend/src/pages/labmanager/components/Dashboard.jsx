@@ -247,8 +247,11 @@ function QCPerformanceChart() {
 
 /* ─── Main Dashboard Content ─── */
 export default function Dashboard() {
-  const { inventoryRequests, approveRequest, rejectRequest } = useLims()
+  const { inventoryRequests, approveRequest, rejectRequest, operationsOverview } = useLims()
   const pendingPOs = inventoryRequests.filter(r => r.status === 'Pending').length
+  const activeSamples = operationsOverview?.activeSamples ?? 0
+  const criticalAlerts = operationsOverview?.criticalAlerts ?? 0
+  const systemStatus = operationsOverview?.systemStatus || 'NORMAL'
 
   return (
     <div className="flex-1 overflow-y-auto bg-gray-50/50 p-6 space-y-5">
@@ -259,15 +262,15 @@ export default function Dashboard() {
       <div className="grid grid-cols-4 gap-0 bg-white rounded-2xl border border-gray-100 shadow-xs overflow-hidden">
         <div className="px-5 py-3.5 border-r border-gray-100">
           <span className="text-xs text-gray-500 font-medium">System Status: </span>
-          <span className="text-sm font-extrabold text-green-600">NORMAL</span>
+          <span className={`text-sm font-extrabold ${systemStatus === 'NORMAL' ? 'text-green-600' : 'text-amber-600'}`}>{systemStatus}</span>
         </div>
         <div className="px-5 py-3.5 border-r border-gray-100">
           <span className="text-xs text-gray-500 font-medium">Active Samples: </span>
-          <span className="text-sm font-extrabold text-gray-900">1,240</span>
+          <span className="text-sm font-extrabold text-gray-900">{activeSamples}</span>
         </div>
         <div className="px-5 py-3.5 border-r border-gray-100">
           <span className="text-xs text-gray-500 font-medium">Critical Alerts: </span>
-          <span className="text-sm font-extrabold text-orange-600">2 (QC Related)</span>
+          <span className="text-sm font-extrabold text-orange-600">{criticalAlerts} (QC Related)</span>
         </div>
         <div className="px-5 py-3.5">
           <span className="text-xs text-gray-500 font-medium">Pending POs: </span>

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react'
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react'
 import axios from 'axios'
 import API, { getCleanBaseUrl } from '../services/api'
 
@@ -8,19 +8,80 @@ const BACKEND_URL = getCleanBaseUrl(rawBackendUrl)
 axios.defaults.baseURL = BACKEND_URL
 axios.defaults.withCredentials = true
 
-// Global axios interceptor to guarantee no duplicate /api/api pathing
+// Global axios interceptor to guarantee no duplicate /api/api pathing and attach JWT Authorization header
 axios.interceptors.request.use((config) => {
   if (config.url && config.url.startsWith('/api/') && config.baseURL && config.baseURL.endsWith('/api')) {
     config.url = config.url.replace(/^\/api/, '');
   }
+  const token = localStorage.getItem('lims_token') || localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
   return config;
 });
 
-const LimsContext = createContext()      
+const LimsContext = createContext()
+
+const validViews = [
+  'landing',
+  'lab-manager',
+  'super-admin',
+  'pathologist',
+  'lab-technician',
+  'sample-collector',
+  'receptionist',
+  'register',
+  'login',
+  'profile',
+  'settings'
+]
+
+const getViewFromPath = (path) => {
+  const cleanPath = (path || '').replace(/^\/+|\/+$/g, '').toLowerCase()
+  if (!cleanPath || cleanPath === 'landing') return 'landing'
+  if (validViews.includes(cleanPath)) return cleanPath
+  return 'landing'
+}
+
+const getPathFromView = (v) => {
+  if (!v || v === 'landing') return '/'
+  return `/${v}`
+}
 
 export function LimsProvider({ children }) {
-  // Navigation View State: 'landing' | 'lab-manager' | 'super-admin' | 'pathologist' | 'lab-technician' | 'sample-collector' | 'receptionist' | 'register' | 'login'
-  const [view, setView] = useState('landing')
+  // Navigation View State with browser URL synchronization
+  const [viewState, setViewState] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return getViewFromPath(window.location.pathname)
+    }
+    return 'landing'
+  })
+
+  const setView = (newView, replace = false) => {
+    setViewState(newView)
+    if (typeof window !== 'undefined') {
+      const targetPath = getPathFromView(newView)
+      if (window.location.pathname !== targetPath) {
+        if (replace) {
+          window.history.replaceState({ view: newView }, '', targetPath)
+        } else {
+          window.history.pushState({ view: newView }, '', targetPath)
+        }
+      }
+    }
+  }
+
+  const view = viewState
+
+  // Sync browser back & forward navigation buttons
+  useEffect(() => {
+    const handlePopState = () => {
+      const currentView = getViewFromPath(window.location.pathname)
+      setViewState(currentView)
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [])
 
   // Tracks which role the user clicked so we can redirect after auth
   const [pendingRole, setPendingRole] = useState(null)
@@ -30,14 +91,7 @@ export function LimsProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   // Pathologist: Cases Queue State
-  const [cases, setCases] = useState([
-    { id: 'PT98765', patientName: 'PT98765***', type: 'Example', urgency: 'Urgent', time: 'Today 11:38 AM', status: 'Signed & Finalized' },
-    { id: 'PT98766', patientName: 'PT98765***', type: 'Case Case', urgency: 'Urgent', time: 'Today 11:38 AM', status: 'Technician Submitted' },
-    { id: 'PT98784', patientName: 'PT98784', type: 'Example', urgency: 'Urgent', time: 'Today 11:30 AM', status: 'Technician Submitted' },
-    { id: 'PT98785', patientName: 'PT98785', type: 'Example', urgency: 'Urgent', time: 'Today 11:30 AM', status: 'Technician Submitted' },
-    { id: 'PT98767', patientName: 'PT98767**', type: 'Man Lab', urgency: 'Urgent', time: 'Today 11:30 AM', status: 'Technician Submitted' },
-    { id: 'PT98763', patientName: 'PT98763', type: 'Example', urgency: 'Urgent', time: 'Today 11:30 AM', status: 'Technician Submitted' }
-  ])
+  const [cases, setCases] = useState([])
 
   // Lab Manager: Roster Schedule State
   const [roster, setRoster] = useState([])
@@ -68,9 +122,6 @@ export function LimsProvider({ children }) {
     }
   }
 
-  useEffect(() => {
-    fetchLabManagerData()
-  }, [view])
 
   // Super Admin: State
   const [branches, setBranches] = useState([])
@@ -97,10 +148,19 @@ export function LimsProvider({ children }) {
     }
   }
 
+  const fetchedRolesRef = useRef({})
+
   useEffect(() => {
-    fetchLabManagerData()
-    fetchSuperAdminData()
-    fetchPathologistData()
+    if (view === 'lab-manager' && !fetchedRolesRef.current['lab-manager']) {
+      fetchedRolesRef.current['lab-manager'] = true
+      fetchLabManagerData()
+    } else if (view === 'super-admin' && !fetchedRolesRef.current['super-admin']) {
+      fetchedRolesRef.current['super-admin'] = true
+      fetchSuperAdminData()
+    } else if (view === 'pathologist' && !fetchedRolesRef.current['pathologist']) {
+      fetchedRolesRef.current['pathologist'] = true
+      fetchPathologistData()
+    }
   }, [view])
 
   // Pathologist: API & MongoDB State
@@ -300,7 +360,9 @@ export function LimsProvider({ children }) {
           const { data } = await axios.get('/api/auth/me', { headers })
           if (data.success && data.exists && data.user) {
             setUser(data.user)
-            setView(data.user.role)
+            if (window.location.pathname === '/' || window.location.pathname === '') {
+              setView(data.user.role, true)
+            }
           } else {
             throw new Error('User profile verification failed')
           }

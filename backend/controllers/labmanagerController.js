@@ -2,93 +2,15 @@ import InventoryRequest from '../models/InventoryRequest.js';
 import StaffRoster from '../models/StaffRoster.js';
 import QualityControl from '../models/QualityControl.js';
 
-// Seed Initial Inventory Requests if database is empty
-const seedInventoryRequests = async () => {
-  const count = await InventoryRequest.countDocuments();
-  if (count === 0) {
-    const initialRequests = [
-      { reqId: 'REQ-201', item: 'CBC Reagent Kits', qty: 50, requester: 'T. Miller', status: 'Pending' },
-      { reqId: 'REQ-202', item: 'Blood Collection Tubes (Lavender)', qty: 100, requester: 'V. Patel', status: 'Pending' },
-      { reqId: 'REQ-203', item: 'PCR Diagnostic Cartridges', qty: 30, requester: 'L. Gomez', status: 'Pending' },
-      { reqId: 'REQ-204', item: 'Sterile Swabs & Media Kits', qty: 200, requester: 'J. Smith', status: 'Approved' },
-    ];
-    await InventoryRequest.insertMany(initialRequests);
-  }
-};
 
-// Seed Initial Staff Roster if database is empty
-const seedStaffRoster = async () => {
-  const count = await StaffRoster.countDocuments();
-  if (count === 0) {
-    const initialRoster = [
-      { name: 'Dr. Sarah Jenkins', dept: 'Hematology', shift: 'Morning' },
-      { name: 'Robert Chen', dept: 'Biochemistry', shift: 'Evening' },
-      { name: 'Jane Doe', dept: 'Radiology', shift: 'Night' },
-      { name: 'Elena Rostova', dept: 'Microbiology', shift: 'Morning' },
-    ];
-    await StaffRoster.insertMany(initialRoster);
-  }
-};
 
-// Seed Initial Quality Control if database is empty
-const seedQualityControl = async () => {
-  const count = await QualityControl.countDocuments();
-  if (count === 0) {
-    const initialQC = [
-      {
-        qcId: 'QC-101',
-        instrumentName: 'Biochemistry Analyzer - Beckman Coulter',
-        lotNumber: 'BC-9982',
-        testCategory: 'Biochemistry',
-        parameterTested: 'Calibrated & Certified',
-        measuredValue: 99.8,
-        targetValue: 100,
-        status: 'Pass',
-        comments: 'Next Due: In 22 Days',
-      },
-      {
-        qcId: 'QC-102',
-        instrumentName: 'Hematology Cell Counter - Sysmex XN',
-        lotNumber: 'SX-4410',
-        testCategory: 'Hematology',
-        parameterTested: 'Deviation Detected',
-        measuredValue: 94.2,
-        targetValue: 100,
-        status: 'Warning',
-        comments: 'Next Due: In 4 Days (Urgent)',
-      },
-      {
-        qcId: 'QC-103',
-        instrumentName: 'Microbiology Incubator - Memmert IN30',
-        lotNumber: 'MI-3001',
-        testCategory: 'Microbiology',
-        parameterTested: 'Optimal Stability',
-        measuredValue: 100,
-        targetValue: 100,
-        status: 'Pass',
-        comments: 'Next Due: In 60 Days',
-      },
-      {
-        qcId: 'QC-104',
-        instrumentName: 'PCR Thermal Cycler - Bio-Rad CFX',
-        lotNumber: 'BR-8821',
-        testCategory: 'Molecular Diagnostics',
-        parameterTested: 'Out of Calibration',
-        measuredValue: 81.5,
-        targetValue: 100,
-        status: 'Fail',
-        comments: 'Calibration Required Immediately',
-      },
-    ];
-    await QualityControl.insertMany(initialQC);
-  }
-};
+
+
 
 // @desc    Get Inventory Purchase Requests
 // @route   GET /api/labmanager/inventory-requests
 export const getInventoryRequests = async (req, res) => {
   try {
-    await seedInventoryRequests();
     const requests = await InventoryRequest.find().sort({ createdAt: -1 });
     res.status(200).json({
       success: true,
@@ -175,7 +97,6 @@ export const rejectInventoryRequest = async (req, res) => {
 // @route   GET /api/labmanager/roster
 export const getRoster = async (req, res) => {
   try {
-    await seedStaffRoster();
     const roster = await StaffRoster.find().sort({ createdAt: -1 });
     res.status(200).json({
       success: true,
@@ -233,7 +154,6 @@ export const removeStaffShift = async (req, res) => {
 // @route   GET /api/labmanager/operations-overview
 export const getOperationsOverview = async (req, res) => {
   try {
-    await seedStaffRoster();
     const roster = await StaffRoster.find();
 
     const deptStaffCount = (dept) => roster.filter((s) => s.dept === dept).length;
@@ -285,7 +205,6 @@ export const getOperationsOverview = async (req, res) => {
 // @route   GET /api/labmanager/quality-control
 export const getQualityControl = async (req, res) => {
   try {
-    await seedQualityControl();
     const qcRecords = await QualityControl.find();
     res.status(200).json({
       success: true,

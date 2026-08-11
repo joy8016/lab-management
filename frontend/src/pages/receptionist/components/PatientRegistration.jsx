@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import axios from 'axios'
 
 export default function PatientRegistration() {
   const [fullName, setFullName] = useState('')
@@ -8,29 +9,32 @@ export default function PatientRegistration() {
   const [email, setEmail] = useState('')
   const [address, setAddress] = useState('')
 
-  const defaultPatients = [
-    { id: 'PAT-1029', name: 'John Doe', phone: '+1 555-0192', gender: 'Male', time: '10:15 AM' },
-    { id: 'PAT-1028', name: 'Jane Smith', phone: '+1 555-0184', gender: 'Female', time: '09:40 AM' },
-  ]
+  const [registeredPatients, setRegisteredPatients] = useState([])
 
-  // Persistent state loaded from localStorage
-  const [registeredPatients, setRegisteredPatients] = useState(() => {
+  const fetchPatientsFromAPI = async () => {
     try {
-      const saved = localStorage.getItem('lims_registered_patients')
-      return saved ? JSON.parse(saved) : defaultPatients
-    } catch (e) {
-      return defaultPatients
+      const res = await axios.get('/api/labtechnician/patients')
+      if (res.data.success && Array.isArray(res.data.data)) {
+        const formatted = res.data.data.map(p => ({
+          id: p.patientId || p._id,
+          name: p.fullName,
+          phone: p.phone || '',
+          gender: p.gender || 'N/A',
+          time: new Date(p.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        }))
+        setRegisteredPatients(formatted)
+      } else {
+        setRegisteredPatients([])
+      }
+    } catch (err) {
+      console.error('Error fetching patients from API:', err)
+      setRegisteredPatients([])
     }
-  })
+  }
 
-  // Sync to localStorage whenever patient list changes
   useEffect(() => {
-    try {
-      localStorage.setItem('lims_registered_patients', JSON.stringify(registeredPatients))
-    } catch (e) {
-      console.error('Error persisting patient registration:', e)
-    }
-  }, [registeredPatients])
+    fetchPatientsFromAPI()
+  }, [])
 
   const [toastMessage, setToastMessage] = useState('')
   const showToast = (msg) => {
@@ -38,18 +42,41 @@ export default function PatientRegistration() {
     setTimeout(() => setToastMessage(''), 4000)
   }
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault()
     if (!fullName.trim()) return
-    const newPatient = {
-      id: `PAT-${Math.floor(1000 + Math.random() * 9000)}`,
-      name: fullName,
-      phone: phone || '+1 555-0000',
-      gender,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    const generatedId = `PAT-${Math.floor(1000 + Math.random() * 9000)}`
+    
+    try {
+      const res = await axios.post('/api/labtechnician/createPatient', {
+        PatientId: generatedId,
+        fullName: fullName.trim(),
+        dob: age ? `${new Date().getFullYear() - parseInt(age)}-01-01` : '2000-01-01',
+        gender,
+        phone: phone || '+1 555-0000',
+        email,
+        address
+      })
+
+      if (res.data.success) {
+        showToast(`Patient ${fullName} (${generatedId}) registered & saved to DB!`)
+        fetchPatientsFromAPI()
+      } else {
+        showToast(`Registration note: ${res.data.message || 'Saved locally'}`)
+      }
+    } catch (err) {
+      const errorMsg = err.response?.data?.message || err.message
+      showToast(`Registered with notice: ${errorMsg}`)
+      const fallbackPatient = {
+        id: generatedId,
+        name: fullName,
+        phone: phone || '+1 555-0000',
+        gender,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }
+      setRegisteredPatients([fallbackPatient, ...registeredPatients])
     }
-    setRegisteredPatients([newPatient, ...registeredPatients])
-    showToast(`Patient ${newPatient.name} (${newPatient.id}) registered successfully! Data saved.`)
+
     setFullName('')
     setAge('')
     setPhone('')

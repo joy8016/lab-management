@@ -1,23 +1,12 @@
 import React, { useState, useEffect } from 'react'
 
 export default function BarcodeLinking() {
-  const defaultPatients = [
-    'S. Ghosh (Home visit - 10:00 AM)',
-    'R. Banerjee (In-lab - 11:30 AM)',
-    'M. Das (Home visit - 01:00 PM)',
-    'A. Sharma (Home visit - 08:30 AM)',
-    'P. Nair (In-lab - 09:15 AM)'
-  ]
-
-  const [patientOptions, setPatientOptions] = useState(defaultPatients)
-  const [patientId, setPatientId] = useState('S. Ghosh (Home visit - 10:00 AM)')
+  const [patientOptions, setPatientOptions] = useState([])
+  const [patientId, setPatientId] = useState('')
   const [barcode, setBarcode] = useState('')
   const [tubeType, setTubeType] = useState('EDTA (Purple Top)')
 
-  const [linkedList, setLinkedList] = useState([
-    { id: 'BC-10234', patient: 'A. Sharma', tube: 'SST (Gold Top)', time: '08:35 AM', status: 'Linked & Verified' },
-    { id: 'BC-10235', patient: 'P. Nair', tube: 'Sodium Fluoride (Grey)', time: '09:20 AM', status: 'Linked & Verified' },
-  ])
+  const [linkedList, setLinkedList] = useState([])
 
   // Toast & Modal State
   const [toastMessage, setToastMessage] = useState('')

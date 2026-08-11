@@ -1,16 +1,13 @@
 import React, { useState } from 'react'
 
 export default function VitalsEntry() {
-  const [patient, setPatient] = useState('S. Ghosh')
-  const [systolic, setSystolic] = useState('120')
-  const [diastolic, setDiastolic] = useState('80')
-  const [pulse, setPulse] = useState('72')
-  const [temp, setTemp] = useState('98.6')
+  const [patient, setPatient] = useState('')
+  const [systolic, setSystolic] = useState('')
+  const [diastolic, setDiastolic] = useState('')
+  const [pulse, setPulse] = useState('')
+  const [temp, setTemp] = useState('')
   const [fasting, setFasting] = useState('Fasting (8+ hrs)')
-  const [savedLogs, setSavedLogs] = useState([
-    { patient: 'A. Sharma', bp: '118/76', pulse: '68', temp: '98.4°F', status: 'Normal' },
-    { patient: 'P. Nair', bp: '135/88', pulse: '76', temp: '99.1°F', status: 'Pre-hypertensive' },
-  ])
+  const [savedLogs, setSavedLogs] = useState([])
 
   const handleSave = (e) => {
     e.preventDefault()

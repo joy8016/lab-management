@@ -2,7 +2,12 @@ import axios from 'axios';
 
 // Helper function to clean base URL and prevent duplicate '/api/api' pathing
 export const getCleanBaseUrl = (urlStr) => {
-  
+  if (!urlStr || urlStr === 'undefined' || urlStr === 'null') {
+    if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+      return 'http://localhost:5000';
+    }
+    return '';
+  }
   let clean = String(urlStr).trim().replace(/\/+$/, '');
   if (clean.toLowerCase().endsWith('/api')) {
     clean = clean.slice(0, -4);
@@ -12,7 +17,7 @@ export const getCleanBaseUrl = (urlStr) => {
 
 const rawUrl =
   import.meta.env.VITE_API_URL ||
-  import.meta.env.VITE_API_BASE_URL 
+  import.meta.env.VITE_API_BASE_URL;
 
 export const BASE_URL = getCleanBaseUrl(rawUrl);
 

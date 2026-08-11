@@ -95,19 +95,7 @@ function CaseReviewQueue({ cases, selectedCaseId, onSelectCase }) {
 /* ─── Selected Case Detail ─── */
 function SelectedCaseDetail({ caseData, onSignDB, onSignContext }) {
   const [remarks, setRemarks] = useState(caseData?.findings || '')
-  const [results, setResults] = useState([
-    { category: 'Blood Counts', tests: [
-      { name: 'Blood Counts', value: '90-120', remark: 'Alevat Kasariam Narrah' },
-      { name: 'Blood Counts', value: '>30', remark: '' },
-    ]},
-    { category: 'Biochemistry', tests: [
-      { name: 'Biochemistry', value: '150', status: null },
-      { name: 'Biochemistry', value: '130', status: null },
-      { name: 'Biochemistry', value: '8.0', status: null },
-      { name: 'Biochemistry', value: '4.0', status: null },
-      { name: 'Biochemistry', value: '2.2', status: null },
-    ]}
-  ])
+  const [results, setResults] = useState([])
 
   const handleTestAction = (catIdx, testIdx, action) => {
     setResults(prev => {

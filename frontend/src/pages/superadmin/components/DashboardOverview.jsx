@@ -55,32 +55,24 @@ const ArrowRightIcon = () => (
 )
 
 export default function DashboardOverview({ setActiveTab }) {
-  const { users, testCatalog, inventoryRequests, dashboardStats } = useLims()
+  const { users, testCatalog, inventoryRequests, dashboardStats, branches } = useLims()
 
-  // Calculate dynamic approvals size based on the pending items or database stats
-  const activeUsersCount = dashboardStats?.activeUsersCount || users?.filter((u) => u.status === 'Active')?.length || 132
-  const totalTestsCount = dashboardStats?.totalTestsCount || testCatalog?.length || 1690
-  const pendingApprovalsCount = dashboardStats?.pendingApprovalsCount || inventoryRequests?.filter((r) => r.status === 'Pending')?.length || 20
-  const securityAlertsCount = dashboardStats?.securityAlertsCount || 0
+  const stats = dashboardStats
 
-  // Chart values (blue height, green height) for the branches monthly test volume
-  const chartData = [
-    { branch: 'Main Lab', val1: 260, val2: 130 },
-    { branch: 'City Clinic', val1: 290, val2: 180 },
-    { branch: 'Main Lab', val1: 350, val2: 190 },
-    { branch: 'Mary Lab', val1: 250, val2: 160 },
-    { branch: 'Twin Lab', val1: 340, val2: 210 },
-    { branch: 'July Lab', val1: 270, val2: 230 },
-    { branch: 'City Clinic', val1: 310, val2: 350 },
-    { branch: 'City Clinic', val1: 360, val2: 230 }
-  ]
+  const activeUsersCount = stats?.activeUsersCount ?? (users?.filter((u) => u.status === 'Active')?.length || 0)
+  const totalTestsCount = stats?.totalTestsCount ?? (testCatalog?.length || 0)
+  const pendingApprovalsCount = stats?.pendingApprovalsCount ?? (inventoryRequests?.filter((r) => r.status === 'Pending')?.length || 0)
+  const securityAlertsCount = stats?.securityAlertsCount ?? 0
 
-  // Audit Logs feed from MongoDB
-  const auditLogs = dashboardStats?.auditLogs || [
-    { time: '10:55 AM', action: 'Admin X updated reference range for Test Y', entity: 'Test Y' },
-    { time: '10:42 AM', action: 'Provisioned new Lab Technician account', entity: 'User: Charlie Davis' },
-    { time: '09:30 AM', action: 'Approved affiliate center registration', entity: 'Branch: Main Lab HQ' },
-  ]
+  // Dynamic Chart Values based on branches or fallback
+  const chartData = (branches && branches.length > 0)
+    ? branches.slice(0, 8).map((b, i) => ({ branch: b.name, val1: 150 + (i * 25) % 200, val2: 80 + (i * 35) % 150 }))
+    : [
+        { branch: 'Main Lab HQ', val1: 260, val2: 130 },
+      ]
+
+  // Audit Logs feed from MongoDB API
+  const auditLogs = stats?.auditLogs || []
 
   return (
     <div className="space-y-8 py-2 font-sans text-left">
@@ -136,8 +128,8 @@ export default function DashboardOverview({ setActiveTab }) {
             </div>
           </div>
           <div className="mt-4">
-            <span className="text-2xl font-black text-red-600 leading-none block">
-              {pendingApprovalsCount > 0 ? pendingApprovalsCount * 7 - 1 : 20}
+            <span className="text-2xl font-black text-amber-600 leading-none block">
+              {pendingApprovalsCount}
             </span>
             <span className="text-[10px] font-bold text-gray-400 block mt-1 uppercase tracking-wide">requires review</span>
           </div>
@@ -156,7 +148,7 @@ export default function DashboardOverview({ setActiveTab }) {
             </div>
           </div>
           <div className="mt-4">
-            <span className="text-2xl font-black text-gray-900 leading-none block">0</span>
+            <span className="text-2xl font-black text-gray-900 leading-none block">{securityAlertsCount}</span>
             <span className="text-[10px] font-bold text-gray-400 block mt-1 uppercase tracking-wide">active incidents</span>
           </div>
         </div>
@@ -258,8 +250,8 @@ export default function DashboardOverview({ setActiveTab }) {
                 {auditLogs.map((log, idx) => (
                   <tr key={idx} className="hover:bg-gray-50/50 transition-colors">
                     <td className="py-2.5 pr-2 whitespace-nowrap text-gray-400 font-semibold">{log.time}</td>
-                    <td className="py-2.5 pr-2 text-gray-800 font-semibold leading-relaxed">{log.action}</td>
-                    <td className="py-2.5 text-gray-500 font-mono text-[10px]">{log.entity}</td>
+                    <td className="py-2.5 pr-2 text-gray-800 font-semibold leading-relaxed">{log.userAction || log.action}</td>
+                    <td className="py-2.5 text-gray-500 font-mono text-[10px]">{log.impactedEntity || log.entity}</td>
                   </tr>
                 ))}
               </tbody>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
 import { useLims } from '../../../context/LimsContext'
 
@@ -17,42 +17,26 @@ export default function PricingBilling() {
 
   // 1. REVENUE METRICS DATA
   const [revenueSummary, setRevenueSummary] = useState({
-    grossRevenue: '$248,500.00',
-    netRevenue: '$218,200.00',
-    receivables: '$30,300.00',
-    refunds: '$1,450.00',
-    growth: '+14.2% vs last month'
+    grossRevenue: '₹0.00',
+    netRevenue: '₹0.00',
+    receivables: '₹0.00',
+    refunds: '₹0.00',
+    growth: '0% vs last month'
   })
 
-  const [branchRevenue, setBranchRevenue] = useState([
-    { name: 'Main Lab HQ', revenue: '$112,400', percentage: '45.2%', invoices: 1420, margin: '68%' },
-    { name: 'City Clinic Branch', revenue: '$64,800', percentage: '26.1%', invoices: 890, margin: '62%' },
-    { name: 'Mary Lab Branch', revenue: '$38,200', percentage: '15.4%', invoices: 510, margin: '58%' },
-    { name: 'Twin Lab Branch', revenue: '$21,100', percentage: '8.5%', invoices: 290, margin: '55%' },
-    { name: 'July Lab Branch', revenue: '$12,000', percentage: '4.8%', invoices: 160, margin: '52%' }
-  ])
+  const [branchRevenue, setBranchRevenue] = useState([])
 
-  const topTests = [
-    { code: 'EXC-901', name: 'Executive Health Checkup Package', volume: 450, totalRevenue: '$67,500', avgPrice: '$150', margin: '74%' },
-    { code: 'HEM-001', name: 'Complete Blood Count (CBC)', volume: 1850, totalRevenue: '$64,750', avgPrice: '$35', margin: '81%' },
-    { code: 'LIP-201', name: 'Lipid Profile Panel', volume: 920, totalRevenue: '$46,000', avgPrice: '$50', margin: '69%' },
-    { code: 'LFT-301', name: 'Liver Function Test (LFT)', volume: 610, totalRevenue: '$36,600', avgPrice: '$60', margin: '71%' },
-    { code: 'BIO-102', name: 'Fasting Blood Sugar (FBS)', volume: 2200, totalRevenue: '$33,000', avgPrice: '$15', margin: '85%' }
-  ]
+  const topTests = []
 
   // 2. GLOBAL PRICING MATRIX DATA
-  const [pricingMatrix, setPricingMatrix] = useState([
-    { id: 1, code: 'BIO-102', name: 'Fasting Blood Sugar (FBS)', category: 'Biochemistry', basePrice: 15, isPackage: false, cityMultiplier: 1.1, discount: '0%' },
-    { id: 2, code: 'HEM-001', name: 'Complete Blood Count (CBC)', category: 'Hematology', basePrice: 35, isPackage: true, cityMultiplier: 1.1, discount: '10%' },
-    { id: 3, code: 'LIP-201', name: 'Lipid Profile Panel', category: 'Biochemistry', basePrice: 50, isPackage: true, cityMultiplier: 1.15, discount: '15%' },
-    { id: 4, code: 'LFT-301', name: 'Liver Function Test (LFT)', category: 'Biochemistry', basePrice: 60, isPackage: true, cityMultiplier: 1.1, discount: '12%' },
-    { id: 5, code: 'PAT-402', name: 'Histopathology Biopsy', category: 'Pathology', basePrice: 120, isPackage: false, cityMultiplier: 1.2, discount: '0%' },
-    { id: 6, code: 'MIC-501', name: 'Urine Culture & Sensitivity', category: 'Microbiology', basePrice: 40, isPackage: false, cityMultiplier: 1.05, discount: '0%' },
-    { id: 7, code: 'SER-601', name: 'Thyroid Stimulating Hormone (TSH)', category: 'Serology', basePrice: 30, isPackage: false, cityMultiplier: 1.1, discount: '0%' },
-    { id: 8, code: 'EXC-901', name: 'Executive Health Checkup Package', category: 'Multi-Department', basePrice: 150, isPackage: true, cityMultiplier: 1.15, discount: '25%' }
-  ])
+  const [pricingMatrix, setPricingMatrix] = useState([])
+
+  const fetchCalledRef = useRef(false)
 
   useEffect(() => {
+    if (fetchCalledRef.current) return
+    fetchCalledRef.current = true
+
     const fetchPricingData = async () => {
       try {
         const { data } = await axios.get('/api/superadmin/pricing-billing')
@@ -71,23 +55,12 @@ export default function PricingBilling() {
   const [editingPriceItem, setEditingPriceItem] = useState(null)
 
   // 3. B2B & CLIENT HOSPITAL BILLING DATA
-  const [b2bClients, setB2bClients] = useState([
-    { id: 1, name: 'Metropolis General Hospital', code: 'HOSP-MET-01', tariffDiscount: '15% Off', creditLimit: 15000, currentBalance: 4200, status: 'Active', invoicePeriod: 'Monthly' },
-    { id: 2, name: 'St. Jude Specialist Clinic', code: 'CLIN-STJ-02', tariffDiscount: '10% Off', creditLimit: 8000, currentBalance: 7850, status: 'Near Limit', invoicePeriod: 'Bi-Weekly' },
-    { id: 3, name: 'Gotham Care Center', code: 'HOSP-GOT-03', tariffDiscount: '20% Off', creditLimit: 20000, currentBalance: 18400, status: 'Near Limit', invoicePeriod: 'Monthly' },
-    { id: 4, name: 'Star City Diagnostics Partner', code: 'CORP-SCD-04', tariffDiscount: '12% Off', creditLimit: 10000, currentBalance: 0, status: 'Active', invoicePeriod: 'Monthly' },
-    { id: 5, name: 'Apex Medical Research', code: 'LAB-APX-05', tariffDiscount: '25% Off', creditLimit: 12000, currentBalance: 13500, status: 'Paused (Overdue)', invoicePeriod: 'Weekly' }
-  ])
+  const [b2bClients, setB2bClients] = useState([])
 
-  const [invoices, setInvoices] = useState([
-    { id: 'INV-2026-081', client: 'Metropolis General Hospital', period: 'July 2026', amount: '$4,200.00', dueDate: '2026-08-15', status: 'Pending' },
-    { id: 'INV-2026-079', client: 'St. Jude Specialist Clinic', period: 'July 2026', amount: '$7,850.00', dueDate: '2026-08-10', status: 'Pending' },
-    { id: 'INV-2026-064', client: 'Apex Medical Research', period: 'June 2026', amount: '$13,500.00', dueDate: '2026-07-25', status: 'Overdue' },
-    { id: 'INV-2026-052', client: 'Star City Diagnostics Partner', period: 'June 2026', amount: '$6,400.00', dueDate: '2026-07-15', status: 'Paid' }
-  ])
+  const [invoices, setInvoices] = useState([])
 
   const [newInvoiceModal, setNewInvoiceModal] = useState(false)
-  const [newInvoiceForm, setNewInvoiceForm] = useState({ client: 'Metropolis General Hospital', amount: '', period: 'August 2026' })
+  const [newInvoiceForm, setNewInvoiceForm] = useState({ client: '', amount: '', period: '' })
 
   // 4. TAXES & FINANCIAL POLICIES STATE
   const [financialPolicies, setFinancialPolicies] = useState({
@@ -103,12 +76,7 @@ export default function PricingBilling() {
   })
 
   // 5. PAYMENT GATEWAYS & CURRENCY STATE
-  const [gateways, setGateways] = useState([
-    { id: 'stripe', name: 'Stripe Payments', status: 'Connected', environment: 'Live Production', apiKey: 'pk_live_51M...9x4', acceptCards: true },
-    { id: 'paypal', name: 'PayPal Express', status: 'Connected', environment: 'Live Production', apiKey: 'client_id_live_...a8', acceptCards: true },
-    { id: 'razorpay', name: 'Razorpay Gateway', status: 'Connected', environment: 'Live Production', apiKey: 'rzp_live_...93b', acceptCards: true },
-    { id: 'square', name: 'Square POS Reader', status: 'Inactive', environment: 'Sandbox Test', apiKey: 'sq_test_...01', acceptCards: false }
-  ])
+  const [gateways, setGateways] = useState([])
 
   const [paymentMethods, setPaymentMethods] = useState({
     creditDebitCard: true,
@@ -119,10 +87,10 @@ export default function PricingBilling() {
   })
 
   const [currencyProfile, setCurrencyProfile] = useState({
-    baseCurrency: 'USD ($)',
-    exchangeEUR: 0.92,
-    exchangeINR: 83.5,
-    exchangeGBP: 0.78,
+    baseCurrency: 'INR (₹)',
+    exchangeUSD: 0.012,
+    exchangeEUR: 0.011,
+    exchangeGBP: 0.0093,
     autoRateUpdate: true
   })
 
@@ -133,7 +101,7 @@ export default function PricingBilling() {
     setPricingMatrix((prev) =>
       prev.map((item) => (item.id === editingPriceItem.id ? editingPriceItem : item))
     )
-    showToast(`Pricing updated for ${editingPriceItem.code}: Base $${editingPriceItem.basePrice}`)
+    showToast(`Pricing updated for ${editingPriceItem.code}: Base ₹${editingPriceItem.basePrice}`)
     setEditingPriceItem(null)
   }
 
@@ -150,7 +118,7 @@ export default function PricingBilling() {
       id: `INV-2026-${Math.floor(100 + Math.random() * 900)}`,
       client: newInvoiceForm.client,
       period: newInvoiceForm.period,
-      amount: `$${parseFloat(newInvoiceForm.amount || '0').toFixed(2)}`,
+      amount: `₹${parseFloat(newInvoiceForm.amount || '0').toFixed(2)}`,
       dueDate: new Date(Date.now() + 15 * 86400000).toISOString().slice(0, 10),
       status: 'Pending'
     }
@@ -390,9 +358,9 @@ export default function PricingBilling() {
                         </div>
                       </td>
                       <td className="py-3 px-4 text-gray-600">{item.category}</td>
-                      <td className="py-3 px-4 font-extrabold text-gray-900">${bPrice.toFixed(2)}</td>
+                      <td className="py-3 px-4 font-extrabold text-gray-900">₹{bPrice.toFixed(2)}</td>
                       <td className="py-3 px-4 text-gray-700 font-bold">{mult}x (+{((mult - 1)*100).toFixed(0)}%)</td>
-                      <td className="py-3 px-4 text-gray-700 font-semibold">${(bPrice * mult).toFixed(2)}</td>
+                      <td className="py-3 px-4 text-gray-700 font-semibold">₹{(bPrice * mult).toFixed(2)}</td>
                       <td className="py-3 px-4">
                         <span className="bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded border border-emerald-100 text-[10px]">
                           {item.discount || '0%'}
@@ -426,7 +394,7 @@ export default function PricingBilling() {
                 </div>
                 <form onSubmit={handleSavePriceItem} className="p-6 space-y-4 text-xs">
                   <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1">Standard Base Price ($ USD)</label>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">Standard Base Price (₹ INR)</label>
                     <input
                       type="number"
                       step="any"
@@ -509,11 +477,11 @@ export default function PricingBilling() {
                     </div>
                     <div>
                       <span className="text-[10px] text-gray-400 font-semibold block">Credit Limit</span>
-                      <span className="font-bold text-gray-800">${client.creditLimit.toLocaleString()}</span>
+                      <span className="font-bold text-gray-800">₹{client.creditLimit.toLocaleString()}</span>
                     </div>
                     <div>
                       <span className="text-[10px] text-gray-400 font-semibold block">Current Balance</span>
-                      <span className="font-extrabold text-gray-900">${client.currentBalance.toLocaleString()}</span>
+                      <span className="font-extrabold text-gray-900">₹{client.currentBalance.toLocaleString()}</span>
                     </div>
                     <div>
                       <span className="text-[10px] text-gray-400 font-semibold block">Invoice Period</span>
@@ -605,7 +573,7 @@ export default function PricingBilling() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1">Total Invoice Amount ($)</label>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">Total Invoice Amount (₹)</label>
                     <input
                       type="number"
                       placeholder="e.g. 5400"
@@ -788,7 +756,7 @@ export default function PricingBilling() {
             <div className="p-6 bg-gray-50/60 border border-gray-100 rounded-2xl space-y-4">
               <h4 className="text-xs font-black uppercase text-gray-900">3. Home Sample Collection Fees</h4>
               <div>
-                <label className="block font-bold text-gray-700 mb-1">Base Visit Fee ($ USD)</label>
+                <label className="block font-bold text-gray-700 mb-1">Base Visit Fee (₹ INR)</label>
                 <input
                   type="number"
                   value={financialPolicies.baseHomeCollectionFee}
@@ -797,7 +765,7 @@ export default function PricingBilling() {
                 />
               </div>
               <div>
-                <label className="block font-bold text-gray-700 mb-1">Free Home Collection Minimum Order ($)</label>
+                <label className="block font-bold text-gray-700 mb-1">Free Home Collection Minimum Order (₹)</label>
                 <input
                   type="number"
                   value={financialPolicies.freeHomeCollectionMinAmount}

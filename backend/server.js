@@ -9,6 +9,7 @@ import labtechnician from "./routes/labtechnician.js";
 import labmanagerRoutes from "./routes/labmanagerRoutes.js";
 import superadminRoutes from "./routes/superadminRoutes.js";
 import pathologistRoutes from "./routes/pathologistRoutes.js";
+import samplecollectorRoutes from "./routes/samplecollectorRoutes.js";
 
 // Connect to MongoDB
 connectDB();
@@ -21,19 +22,27 @@ const isProduction = process.env.NODE_ENV === 'production';
 
 // Dynamic CORS Configuration
 const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:3000',
-  process.env.CLIENT_URL,
+  'http://localhost:5174',
+   
+
+  process.env.CLIENT_URL ? `https://${process.env.CLIENT_URL.replace(/^https?:\/\//, '')}` : 'http://localhost:5173'
+
+  
 ].filter(Boolean);
 
 const corsOptions = {
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin) || !isProduction) {
+    if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
+      return callback(null, true);
+    }
+    if (allowedOrigins.some(allowed => origin.startsWith(allowed))) {
       return callback(null, true);
     }
     return callback(null, true);
   },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 };
 
 app.use(cors(corsOptions));
@@ -47,6 +56,7 @@ app.use('/api/labtechnician', labtechnician);
 app.use('/api/labmanager', labmanagerRoutes);
 app.use('/api/superadmin', superadminRoutes);
 app.use('/api/pathologist', pathologistRoutes);
+app.use('/api/samplecollector', samplecollectorRoutes);
 
 // Health check
 app.get("/health", (req, res) => {

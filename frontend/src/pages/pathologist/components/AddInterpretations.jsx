@@ -123,7 +123,7 @@ export default function AddInterpretations() {
     return mockInterpretationCases;
   }, [dbCases]);
 
-  const [selectedCase, setSelectedCase] = useState(availableCases[0] || mockInterpretationCases[0]);
+  const [selectedCase, setSelectedCase] = useState(availableCases[0] || null);
   const [selectedTemplateId, setSelectedTemplateId] = useState('');
   
   // Editor State

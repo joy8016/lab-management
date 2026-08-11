@@ -14,16 +14,10 @@ export default function SampleIntake() {
     }
   }
 
-  // Patient Selection state
   const [patientSearch, setPatientSearch] = useState('')
   const [showPatientDropdown, setShowPatientDropdown] = useState(false)
   const [dbPatients, setDbPatients] = useState([])
-  const [selectedPatient, setSelectedPatient] = useState({
-    name: 'Emily Johnson',
-    id: 'PT-88204',
-    dob: '04/12/1988',
-    gender: 'Female'
-  })
+  const [selectedPatient, setSelectedPatient] = useState(null)
 
   // Register New Patient Modal State
   const [showRegisterModal, setShowRegisterModal] = useState(false)
@@ -50,6 +44,9 @@ export default function SampleIntake() {
             address: p.address
           }))
           setDbPatients(formatted)
+          if (formatted.length > 0 && !selectedPatient) {
+            setSelectedPatient(formatted[0])
+          }
         }
       } catch (err) {
         console.error('Error fetching patients from database:', err)
@@ -60,37 +57,25 @@ export default function SampleIntake() {
 
   // Specimen Details state
   const [sampleType, setSampleType] = useState('Blood (Whole Blood/EDTA)')
-  const [collectionDate, setCollectionDate] = useState('2026-07-23')
+  const [collectionDate, setCollectionDate] = useState(new Date().toISOString().slice(0, 10))
   const [collectionTime, setCollectionTime] = useState('08:30 AM')
   const [collectionMethod, setCollectionMethod] = useState('Venipuncture')
   const [specimenCondition, setSpecimenCondition] = useState('Normal')
 
   // Test Order Selection state
   const [testSearch, setTestSearch] = useState('')
-  const [selectedTests, setSelectedTests] = useState(['CBC + Diff', 'Lipid Panel'])
+  const [selectedTests, setSelectedTests] = useState([])
   const [priority, setPriority] = useState('Routine')
 
   // Notes & Barcode state
-  const [clinicalNotes, setClinicalNotes] = useState('Fasting for 12 hours prior to draw...')
+  const [clinicalNotes, setClinicalNotes] = useState('')
   const [printImmediately, setPrintImmediately] = useState(true)
 
   // Success Modal state
   const [showSuccessModal, setShowSuccessModal] = useState(false)
 
-  // Fallback / Initial Patients
-  const patientsDatabase = [
-    { id: 'PT-88204', name: 'Emily Johnson', dob: '04/12/1988', gender: 'Female' },
-    { id: 'PT-44109', name: 'Mark Williams', dob: '11/05/1975', gender: 'Male' },
-    { id: 'PT-90112', name: 'Sarah Connor', dob: '08/21/1992', gender: 'Female' },
-    { id: 'PT-31088', name: 'Michael Chang', dob: '02/14/1985', gender: 'Male' },
-    { id: 'PT-67520', name: 'Jessica Taylor', dob: '09/30/1995', gender: 'Female' }
-  ]
-
-  // Combine DB patients with static fallback list
-  const combinedPatients = [
-    ...dbPatients,
-    ...patientsDatabase.filter(p => !dbPatients.some(dbP => dbP.id === p.id))
-  ]
+  // Combined patients list from live API database
+  const combinedPatients = dbPatients
 
   // Available Tests List
   const availableTests = [

@@ -274,7 +274,6 @@ const seedPathologyAuditLogs = async () => {
 // @route   GET /api/pathologist/cases
 export const getPathologyCases = async (req, res) => {
   try {
-    await seedPathologyCases();
     const cases = await PathologyCase.find().sort({ createdAt: -1 });
     res.status(200).json({
       success: true,
@@ -414,7 +413,6 @@ export const saveInterpretation = async (req, res) => {
 // @route   GET /api/pathologist/validations
 export const getTestValidations = async (req, res) => {
   try {
-    await seedTestValidations();
     const validations = await TestValidation.find().sort({ createdAt: -1 });
     res.status(200).json({
       success: true,
@@ -523,7 +521,6 @@ export const retestSingleTestResult = async (req, res) => {
 // @route   GET /api/pathologist/audit-logs
 export const getAuditLogs = async (req, res) => {
   try {
-    await seedPathologyAuditLogs();
     const logs = await PathologyAudit.find().sort({ createdAt: -1 });
     res.status(200).json({
       success: true,

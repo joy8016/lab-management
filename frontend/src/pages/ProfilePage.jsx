@@ -49,11 +49,9 @@ export default function ProfilePage() {
   // 2FA State
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(true)
 
-  // Active Sessions Mock Data
+  // Active Sessions Data
   const [sessions, setSessions] = useState([
-    { id: 1, device: 'Chrome on Windows 11 (Current)', ip: '192.168.1.104', location: 'Metropolis HQ', lastActive: 'Active Now', current: true },
-    { id: 2, device: 'Safari on iPad Pro', ip: '172.56.12.89', location: 'Metropolis Central', lastActive: '2 hours ago', current: false },
-    { id: 3, device: 'LIMS Mobile App (Android)', ip: '10.0.4.19', location: 'Satellite Branch A', lastActive: 'Yesterday at 4:15 PM', current: false },
+    { id: 1, device: 'Browser Session (Current)', ip: '127.0.0.1', location: 'Local Session', lastActive: 'Active Now', current: true },
   ])
 
   // Get user role display name

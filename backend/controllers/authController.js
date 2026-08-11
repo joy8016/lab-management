@@ -13,12 +13,15 @@ const sendTokenResponse = (user, statusCode, res) => {
     expiresIn: process.env.JWT_EXPIRE || '7d',
   });
 
+  const isProd = process.env.NODE_ENV === 'production';
+  const isLocalHost = res.req?.headers?.host?.includes('localhost') || res.req?.headers?.host?.includes('127.0.0.1');
+
   const options = {
     expires: new Date(
       Date.now() + (parseInt(process.env.COOKIE_EXPIRE) || 7) * 24 * 60 * 60 * 1000
     ),
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: isProd && !isLocalHost,
     sameSite: 'lax',
   };
 

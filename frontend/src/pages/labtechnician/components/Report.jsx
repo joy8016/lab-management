@@ -11,7 +11,7 @@ export default function Report() {
   const [statusFilter, setStatusFilter] = useState('All')
 
   // Interactive Checkbox state
-  const [selectedIds, setSelectedIds] = useState(['LAB-23460', 'LAB-23459', 'LAB-23457'])
+  const [selectedIds, setSelectedIds] = useState([])
   const [selectAll, setSelectAll] = useState(false)
 
   // Report Modal Preview State
@@ -30,78 +30,15 @@ export default function Report() {
     address: ''
   })
 
-  // Diagnostic Reports Data List matching the wireframe
-  const [reports, setReports] = useState([
-    {
-      id: 'LAB-23460',
-      patient: 'Emily Johnson',
-      patientId: 'PT-88204',
-      testType: 'Lipid Panel',
-      completedAt: '09:15 AM',
-      status: 'Approved',
-      pathologist: 'Dr. Smith',
-      date: 'Today',
-      results: [
-        { name: 'Total Cholesterol', value: '210 mg/dL', ref: '125-200 mg/dL', status: 'High' },
-        { name: 'HDL Cholesterol', value: '55 mg/dL', ref: '40-60 mg/dL', status: 'Normal' },
-        { name: 'LDL Cholesterol', value: '130 mg/dL', ref: '<100 mg/dL', status: 'Elevated' },
-        { name: 'Triglycerides', value: '145 mg/dL', ref: '<150 mg/dL', status: 'Normal' }
-      ]
-    },
-    {
-      id: 'LAB-23459',
-      patient: 'Mark Williams',
-      patientId: 'PT-44109',
-      testType: 'CBC + Diff',
-      completedAt: '08:45 AM',
-      status: 'Approved',
-      pathologist: 'Dr. Smith',
-      date: 'Today',
-      results: [
-        { name: 'WBC', value: '6.8 x10^9/L', ref: '4.0-11.0', status: 'Normal' },
-        { name: 'RBC', value: '4.8 ug/L', ref: '1.8-4.8', status: 'Normal' },
-        { name: 'Hgb', value: '14.2 g/dL', ref: '13.5-17.5', status: 'Normal' },
-        { name: 'Plt', value: '240 ng/L', ref: '150-450', status: 'Normal' }
-      ]
-    },
-    {
-      id: 'LAB-23456',
-      patient: 'John Doe',
-      patientId: 'PT-98765',
-      testType: 'CBC + Diff',
-      completedAt: '--:-- AM',
-      status: 'Flagged',
-      pathologist: 'Pending',
-      date: 'Today',
-      results: [
-        { name: 'WBC', value: '14.5 x10^9/L', ref: '4.0-11.0', status: 'Critical High' },
-        { name: 'RBC', value: '4.8 ug/L', ref: '1.8-4.8', status: 'Normal' },
-        { name: 'Hgb', value: '6.2 ug/L', ref: '13.9-13.9', status: 'Low Abnormal' }
-      ]
-    },
-    {
-      id: 'LAB-23457',
-      patient: 'Sarah Connor',
-      patientId: 'PT-90112',
-      testType: 'Thyroid Panel',
-      completedAt: 'Yesterday',
-      status: 'Approved',
-      pathologist: 'Dr. Adams',
-      date: 'Yesterday',
-      results: [
-        { name: 'TSH', value: '2.4 uIU/mL', ref: '0.4-4.0', status: 'Normal' },
-        { name: 'Free T4', value: '1.2 ng/dL', ref: '0.8-1.8', status: 'Normal' },
-        { name: 'Free T3', value: '3.1 pg/mL', ref: '2.3-4.2', status: 'Normal' }
-      ]
-    }
-  ])
+  // Diagnostic Reports Data List from DB
+  const [reports, setReports] = useState([])
 
   // Fetch all reports from backend database on mount
   useEffect(() => {
     const fetchDbReports = async () => {
       try {
         const res = await axios.get('/api/labtechnician/samples')
-        if (res.data?.success && Array.isArray(res.data.data) && res.data.data.length > 0) {
+        if (res.data?.success && Array.isArray(res.data.data)) {
           const dbItems = res.data.data.map(s => ({
             id: s.sampleId || s._id,
             patient: s.patient?.fullName || (typeof s.patient === 'object' ? s.patient?.fullName : s.patient) || 'Registered Patient',
@@ -117,10 +54,7 @@ export default function Report() {
               { name: 'LDL Cholesterol', value: '130 mg/dL', ref: '<100 mg/dL', status: 'Elevated' }
             ]
           }))
-          setReports(prev => {
-            const merged = [...dbItems, ...prev.filter(p => !dbItems.some(d => d.id === p.id))]
-            return merged
-          })
+          setReports(dbItems)
         }
       } catch (err) {
         console.warn('Backend samples API unavailable for reports list:', err)

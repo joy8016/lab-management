@@ -33,19 +33,11 @@ export default function Header({ onLogout, onBack, onOpenProfile }) {
   const [showMessages, setShowMessages] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
 
-  // Mock messages list state
-  const [messages, setMessages] = useState([
-    { id: 1, sender: 'Dr. Sarah Jenkins', role: 'Lab Manager', text: 'Submitted weekly technician roster for review.', time: '10:42 AM', unread: true },
-    { id: 2, sender: 'Robert Chen', role: 'Pathologist', text: 'High volume CBC samples require calibration approval.', time: '09:15 AM', unread: true },
-    { id: 3, sender: 'Jane Doe', role: 'Receptionist', text: 'New insurance provider pricing scheme needs confirmation.', time: 'Yesterday', unread: false }
-  ])
+  // Messages list state
+  const [messages, setMessages] = useState([])
 
-  // Mock notifications list state
-  const [notifications, setNotifications] = useState([
-    { id: 1, title: 'Pending Clearance', desc: '20 pending laboratory clearance approvals waiting for Super Admin authorization.', time: 'Just now', type: 'urgent', unread: true },
-    { id: 2, title: 'Branch Audit Alert', desc: 'Main Lab HQ completed quarterly compliance report.', time: '1 hour ago', type: 'info', unread: true },
-    { id: 3, title: 'System Security', desc: 'Backup ledger synchronized successfully with cloud storage.', time: '3 hours ago', type: 'success', unread: false }
-  ])
+  // Notifications list state
+  const [notifications, setNotifications] = useState([])
 
   const [newMessageText, setNewMessageText] = useState('')
 

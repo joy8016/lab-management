@@ -32,13 +32,8 @@ export default function Dashboard({ setActiveTab }) {
   // Active Stepper Index: 0=Registration, 1=Test Booking, 2=Label Printing, 3=Awaiting Report, 4=Notify Patient
   const [activeStep, setActiveStep] = useState(1)
 
-  // Dynamic Selected Tests for Jane Smith
-  const [selectedTests, setSelectedTests] = useState([
-    { id: 1, name: 'Test Name', code: 'CBC', price: 30.0, checked: true },
-    { id: 2, name: 'Test Name', code: 'CBC', price: 30.0, checked: true },
-    { id: 3, name: 'Glucose', code: 'CBC', price: 25.0, checked: false },
-    { id: 4, name: 'Lipid Panel', code: 'Lipid Panel', price: 10.0, checked: false },
-  ])
+  // Selected Tests for Patient
+  const [selectedTests, setSelectedTests] = useState([])
 
   // Catalog tests for dynamic dropdown
   const catalogTests = [
@@ -56,25 +51,10 @@ export default function Dashboard({ setActiveTab }) {
   const [labelOption, setLabelOption] = useState('all')
 
   // Recent activity list state
-  const [activities, setActivities] = useState([
-    'Registered: John Doe',
-    'Booked Test: Jane Smith - CBC',
-    'Booked Test: Jane Smith - CBC',
-    'Booked Test: Jane Smith - ID: 12345)',
-    'Booked Test: Jane Smith - CBC',
-    'Registered: Jane Smith - CBC',
-    'Registered: John Doe',
-    'Registered: John Doe',
-    'Booked Test: Jane Smith - CBC',
-    'Booked Test: Jane Smith - CBC',
-    'Registered: John Doe',
-  ])
+  const [activities, setActivities] = useState([])
 
   // Ready Reports List
-  const [reports, setReports] = useState([
-    { id: 1, patient: 'Jane Smith', test: 'Test Name', time: '12:50 AM', status: 'Ready' },
-    { id: 2, patient: 'John Doe', test: 'Ready / Status', time: '03:30 AM', status: 'Ready' }
-  ])
+  const [reports, setReports] = useState([])
 
   // Filter inputs for Report Status
   const [reportSearch, setReportSearch] = useState('')

@@ -141,11 +141,6 @@ const seedUsers = async () => {
 // @route   GET /api/superadmin/dashboard-stats
 export const getDashboardStats = async (req, res) => {
   try {
-    await seedBranches();
-    await seedTestCatalog();
-    await seedAuditLogs();
-    await seedUsers();
-
     const activeUsersCount = await User.countDocuments({ status: 'Active' });
     const totalTestsCount = await TestCatalogItem.countDocuments();
     const logs = await AuditLog.find().sort({ createdAt: -1 }).limit(10);
@@ -154,9 +149,9 @@ export const getDashboardStats = async (req, res) => {
     res.status(200).json({
       success: true,
       data: {
-        activeUsersCount: activeUsersCount || 132,
-        totalTestsCount: totalTestsCount || 1690,
-        pendingApprovalsCount: 20,
+        activeUsersCount: activeUsersCount || 0,
+        totalTestsCount: totalTestsCount || 0,
+        pendingApprovalsCount: 0,
         securityAlertsCount: 0,
         auditLogs: logs.map((l) => ({
           time: l.time,
@@ -175,7 +170,6 @@ export const getDashboardStats = async (req, res) => {
 // @route   GET /api/superadmin/branches
 export const getBranches = async (req, res) => {
   try {
-    await seedBranches();
     const branches = await Branch.find().sort({ createdAt: -1 });
     res.status(200).json({
       success: true,
@@ -233,7 +227,6 @@ export const addBranch = async (req, res) => {
 // @route   GET /api/superadmin/users
 export const getUsers = async (req, res) => {
   try {
-    await seedUsers();
     const users = await User.find().select('-password').sort({ createdAt: -1 });
     const formatRole = (r) => {
       if (!r) return 'Lab Technician';
@@ -352,7 +345,6 @@ export const toggleUserStatus = async (req, res) => {
 // @route   GET /api/superadmin/test-catalog
 export const getTestCatalog = async (req, res) => {
   try {
-    await seedTestCatalog();
     const tests = await TestCatalogItem.find().sort({ createdAt: -1 });
     res.status(200).json({
       success: true,
@@ -430,24 +422,17 @@ export const addTestCatalogItem = async (req, res) => {
 // @route   GET /api/superadmin/pricing-billing
 export const getPricingBilling = async (req, res) => {
   try {
-    await seedTestCatalog();
     const tests = await TestCatalogItem.find();
     
     const revenueSummary = {
-      grossRevenue: '$248,500.00',
-      netRevenue: '$218,200.00',
-      receivables: '$30,300.00',
-      refunds: '$1,450.00',
-      growth: '+14.2% vs last month',
+      grossRevenue: '₹0.00',
+      netRevenue: '₹0.00',
+      receivables: '₹0.00',
+      refunds: '₹0.00',
+      growth: '0% vs last month',
     };
 
-    const branchRevenue = [
-      { name: 'Main Lab HQ', revenue: '$112,400', percentage: '45.2%', invoices: 1420, margin: '68%' },
-      { name: 'City Clinic Branch', revenue: '$64,800', percentage: '26.1%', invoices: 890, margin: '62%' },
-      { name: 'Mary Lab Branch', revenue: '$38,200', percentage: '15.4%', invoices: 510, margin: '58%' },
-      { name: 'Twin Lab Branch', revenue: '$21,100', percentage: '8.5%', invoices: 290, margin: '55%' },
-      { name: 'July Lab Branch', revenue: '$12,000', percentage: '4.8%', invoices: 160, margin: '52%' },
-    ];
+    const branchRevenue = [];
 
     res.status(200).json({
       success: true,
